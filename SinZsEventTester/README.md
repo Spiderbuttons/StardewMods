@@ -37,6 +37,8 @@ Command | Usage | Example
 `sinz.gc` | Prints memory usage to the log.
 `sinz.gc true` | Prints memory usage to the log, and calls the dotnet gc.
 `sinz.monitor_performance` | Toggles the presence of the performance monitor.
+`sinz.check_dialogue` | Warps the player around to every NPC, displaying the dialogue they have today, and writing that to the log.
+`sinz.check_dialogue <npc names>+` | Warps the player to the listed NPC and plays every dialogue they have in their file, in order to check for parsing issues | `sinz.check_dialogue Pam`
 
 Additionally the mod adds the following commands to the game's own debug commands. With `AllowCheats` enabled, these are available via the chatbox.
 
