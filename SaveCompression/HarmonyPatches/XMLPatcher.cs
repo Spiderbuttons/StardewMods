@@ -5,12 +5,14 @@ using HarmonyLib;
 
 using Microsoft.Xna.Framework;
 
-namespace SaveCompression;
+namespace SaveCompression.HarmonyPatches;
 
+/// <summary>
+/// Patches XMLSer to avoid serializing default types.
+/// </summary>
 [HarmonyPatch(typeof(XmlReflectionImporter))]
 internal static class XMLPatcher
 {
-
     [HarmonyPatch("GetAttributes", [typeof(MemberInfo)])]
     private static void Postfix(XmlReflectionImporter __instance, MemberInfo memberInfo, XmlAttributes __result)
     {
@@ -40,6 +42,10 @@ internal static class XMLPatcher
         {
             attr.XmlDefaultValue = Point.Zero;
         }
+        else if (type == typeof(Rectangle))
+        {
+            attr.XmlDefaultValue = Rectangle.Empty;
+        }
         else if (type == typeof(int) || type == typeof(long) || type == typeof(uint) || type == typeof(ulong))
         {
             attr.XmlDefaultValue = 0;
@@ -60,9 +66,13 @@ internal static class XMLPatcher
         {
             attr.XmlDefaultValue = Color.White;
         }
+        else if (type.IsValueType)
+        {
+            attr.XmlDefaultValue = Activator.CreateInstance(type);
+        }
         else
         {
-             ModEntry.ModMonitor.LogOnce(type.FullName ?? "");
+            ModEntry.ModMonitor.LogOnce(type.FullName ?? string.Empty);
         }
     }
 }

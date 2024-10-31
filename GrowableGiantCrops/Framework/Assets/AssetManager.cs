@@ -141,19 +141,17 @@ internal static class AssetManager
         {
             if (ModEntry.Config.PalmTreeBehavior.HasFlagFast(PalmTreeBehavior.Seasonal))
             {
-                WildTreeTextureData winterTex = new()
+                valleyTree.Textures.Add(new()
                 {
                     Season = Season.Winter,
                     Texture = WinterPalm.BaseName,
-                };
+                });
 
-                WildTreeTextureData fallTex = new()
+                valleyTree.Textures.Add(new()
                 {
                     Season = Season.Fall,
                     Texture = FallPalm.BaseName,
-                };
-
-                valleyTree.Textures.InsertRange(0, new[] { winterTex, fallTex });
+                });
             }
 
             if (ModEntry.Config.PalmTreeBehavior.HasFlagFast(PalmTreeBehavior.Stump))

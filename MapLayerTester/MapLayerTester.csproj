@@ -3,19 +3,15 @@
 
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableHarmony>true</EnableHarmony>
   </PropertyGroup>
 
   <PropertyGroup>
-    <Name>Save Compression</Name>
-    <Description>Reduces save file size.</Description>
+    <Name>MapTester</Name>
+    <Authors>atravita</Authors>
+    <Description>Per request by Pathos, inserts a tilesheet.</Description>
     <Version>0.1.0</Version>
     <UpdateKeys>-1</UpdateKeys>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="i18n\default.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Newtonsoft.Json" HintPath="$(GamePath)\smapi-internal\Newtonsoft.Json.dll" private="false" />
@@ -35,5 +31,10 @@
     <PackageReference Update="JetBrains.Annotations" Version="2023.3.0" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
 
 </Project>
+

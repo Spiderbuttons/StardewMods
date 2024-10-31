@@ -1,5 +1,6 @@
 ﻿namespace SinZsEventTester;
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -46,6 +47,8 @@ public sealed class ModEntry : Mod
     private FastForwardHandler? fastForwardHandler;
     private MonitorPerformance? performanceMonitor;
     private DialogueChecker? dialogueChecker;
+    private bool _prevPauseWhenUnfocused = true;
+    private bool _prevDialogueTyping = true;
 
     /// <inheritdoc />
     public override void Entry(IModHelper helper)
@@ -375,12 +378,27 @@ public sealed class ModEntry : Mod
 
         this.hooked = true;
         this.Helper.Events.GameLoop.UpdateTicked += this.GameLoop_UpdateTicked;
+
+        if (Game1.game1?.instanceOptions is { } options)
+        {
+            this._prevPauseWhenUnfocused = options.pauseWhenOutOfFocus;
+            this._prevDialogueTyping = options.dialogueTyping;
+
+            options.pauseWhenOutOfFocus = false;
+            options.dialogueTyping = false;
+        }
     }
 
     private void UnHook()
     {
         this.hooked = false;
         this.Helper.Events.GameLoop.UpdateTicked -= this.GameLoop_UpdateTicked;
+
+        if (Game1.game1?.instanceOptions is { } options)
+        {
+            options.pauseWhenOutOfFocus = this._prevPauseWhenUnfocused;
+            options.dialogueTyping = this._prevDialogueTyping;
+        }
     }
 
     #region queues events.
@@ -946,6 +964,7 @@ Outer: ;
 
     #region tree types
 
+    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1313:Parameter names should begin with lower-case letter", Justification = "This is a record.")]
     private record Node(string ResponseKey, int ResponsePosition, List<Node> Children)
     {
         [JsonProperty]

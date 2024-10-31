@@ -230,7 +230,9 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 
     private void CheckItemSpawn(ISpawnItemData spawnable, string[] breadcrumbs)
     {
-        monitor.Log($"Checking: {spawnable.ItemId} - {spawnable.PerItemCondition ?? "no per item condition"}\n{breadcrumbs.Render()}", LogLevel.Info);
+
+        string id = spawnable.RandomItemId is not null ? string.Join(", ", spawnable.RandomItemId) : spawnable.ItemId;
+        monitor.Log($"Checking: {id} - {spawnable.PerItemCondition ?? "no per item condition"}\n{breadcrumbs.Render()}", LogLevel.Info);
 
         // special handling for machines.
         if (spawnable is MachineItemOutput machineData && machineData.OutputMethod is { } method)

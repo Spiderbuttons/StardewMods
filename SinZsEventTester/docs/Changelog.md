@@ -1,6 +1,9 @@
 ﻿Changelog
 ===============
 
+### Version 0.1.7
+* Added dialogue checker.
+
 ### Version 0.1.6
 * Added ability to fast forward.
 * Added ability to use the chatbox commands.
