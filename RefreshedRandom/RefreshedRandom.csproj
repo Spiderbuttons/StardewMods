@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Name>Colorful Fishing Rods</Name>
-    <Description>Lets you override the colors of fishing rods.</Description>
-    <Version>0.1.1</Version>
+    <Name>ReferesreshedRandom</Name>
+    <Description>Adjusts Stardew's random to feel more random.</Description>
+    <Version>0.1.0</Version>
     <UpdateKeys>-1</UpdateKeys>
   </PropertyGroup>
 
@@ -30,5 +30,6 @@
   <ItemGroup>
     <PackageReference Update="JetBrains.Annotations" Version="2023.3.0" />
   </ItemGroup>
+
 
 </Project>

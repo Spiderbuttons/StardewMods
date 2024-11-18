@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Reflection.PortableExecutable;
 
 using Microsoft.Xna.Framework.Content;
 
@@ -60,6 +59,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
                 }
 
                 string asset = $"Data/{method.Name.Replace('_', '/')}";
+                monitor.Log($"Checking {asset}", LogLevel.Info);
                 string[] breadcrumbs = [asset];
 
                 this.Process(data, breadcrumbs, _additionalAssets.GetValueOrDefault(asset) ?? Extensions.IsPossibleGSQString);
@@ -138,6 +138,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
         if (data is ISpawnItemData spawnable)
         {
             this.CheckItemSpawn(spawnable, breadcrumbs);
+            return;
         }
 
         Type t = data.GetType();
@@ -173,7 +174,16 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
         {
             foreach (FieldInfo field in t.GetFields())
             {
-                if (filter(field.Name) && field.FieldType == typeof(string))
+                if (field.Name == "ItemId" && field.FieldType == typeof(string))
+                {
+                    var itemID = (string?)field.GetValue(data);
+                    if (itemID is not null)
+                    {
+                        monitor.Log($"Checking: {itemID}\n{breadcrumbs.Render()}", LogLevel.Info);
+                        this.CheckItemQuery(itemID, null, [.. breadcrumbs, field.Name]);
+                    }
+                }
+                else if (filter(field.Name) && field.FieldType == typeof(string))
                 {
                     string? gsq = (string?)field.GetValue(data);
                     this.CheckGSQ(gsq, [..breadcrumbs, field.Name]);
@@ -187,6 +197,15 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 
             foreach (PropertyInfo prop in t.GetProperties())
             {
+                if (prop.Name == "ItemId" && prop.PropertyType == typeof(string))
+                {
+                    var itemID = (string?)prop.GetValue(data);
+                    if (itemID is not null)
+                    {
+                        monitor.Log($"Checking: {itemID}\n{breadcrumbs.Render()}", LogLevel.Info);
+                        this.CheckItemQuery(itemID, null, [.. breadcrumbs, prop.Name]);
+                    }
+                }
                 if (filter(prop.Name) && prop.PropertyType == typeof(string))
                 {
                     string? gsq = (string?)prop.GetValue(data);
@@ -259,7 +278,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 
     private void CheckItemQuery(string query, string? perItemCondition, string[] breadcrumbs)
     {
-        ItemQueryContext context = new(Game1.currentLocation, Game1.player, Random.Shared);
+        ItemQueryContext context = new(Game1.currentLocation, Game1.player, Random.Shared, breadcrumbs.Render());
         string tokenized_query = query.Replace("BOBBER_X", "4").Replace("BOBBER_Y", "6").Replace("WATER_DEPTH", "5").Replace("DROP_IN_ID", "(O)69").Replace("DROP_IN_PRESERVE", "(O)69").Replace("NEARBY_FLOWER_ID", "597").Replace("DROP_IN_QUALITY", "4");
         ItemQueryResult[] result = ItemQueryResolver.TryResolve(
             tokenized_query,
