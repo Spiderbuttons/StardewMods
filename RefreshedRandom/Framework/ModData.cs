@@ -30,7 +30,7 @@ public sealed class ModData
         this.LastSeed = GenerateSeed();
     }
 
-    internal void Populate(Farmer player)
+    internal void Update(Farmer player)
     {
         this.LastMilliseconds = (int)(player.millisecondsPlayed ^ (player.millisecondsPlayed << 32));
         this.LastSteps = (int)player.stats.StepsTaken;

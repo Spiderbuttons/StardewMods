@@ -5,6 +5,11 @@ using System.Reflection.Emit;
 using System.Data.HashFunction;
 using System.Runtime.Serialization;
 
+// To create a seeded xoshiro, we first use xxhash64 to condense an array down to a single ulong
+// the use splitmix to expand it back to 128 or 256 bits.
+// xxhash 128 is not available in net 6 (and is probably too much work to backport).
+// 64 bits is probably enough entropy.
+// we can reconsider if it feels bad.
 
 internal static class SeededXoshiroFactory
 {
@@ -64,11 +69,27 @@ internal static class SeededXoshiroFactory
 
     private static void SplitMix256(ulong seed, Span<ulong> buffer)
     {
+        SplitMix mixer = new(seed);
 
+        for (int i = 0; i < buffer.Length; i++)
+        {
+            var next = mixer.Next();
+            buffer[i] = next;
+        }
     }
 
     private static void SplitMix128(ulong seed, Span<uint> buffer)
     {
+        SplitMix mixer = new(seed);
 
+        for (int i = 0; i < buffer.Length; i++)
+        {
+            var next = mixer.Next();
+            buffer[i] = (uint)next;
+            if (buffer.Length > i + 1)
+            {
+                buffer[i + 1] = (uint)(next >> 32);
+            }
+        }
     }
 }

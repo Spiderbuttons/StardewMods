@@ -16,6 +16,9 @@ internal sealed class ModEntry : Mod
     /// </summary>
     internal static ModData? Data { get; private set; }
 
+    /// <summary>
+    /// Gets the logger for this mod.
+    /// </summary>
     internal static IMonitor ModMonitor { get; private set; } = null!;
 
     /// <inheritdoc />
@@ -31,7 +34,7 @@ internal sealed class ModEntry : Mod
 
         // multiplayer
         helper.Events.Multiplayer.PeerConnected += this.PeerConnected;
-        helper.Events.Multiplayer.ModMessageReceived += this.Multiplayer_ModMessageReceived;
+        helper.Events.Multiplayer.ModMessageReceived += this.ModMessageReceived;
 
         Harmony harmony = new(this.ModManifest.UniqueID);
         DaySaveRandomPatch.ApplyPatch(harmony);
@@ -42,10 +45,16 @@ internal sealed class ModEntry : Mod
     /// <inheritdoc cref="IGameLoopEvents.SaveCreated"/>
     private void OnSaveCreate(object? sender, SaveCreatedEventArgs e)
     {
+        // On new game, we need to make sure Data is populated with...something.
+        // to keep re-creates of new games consistent, we will not be using a randomly generated number for LastSeed.
         if (Context.IsMainPlayer)
         {
-            Data = new();
-            Data.Populate(Game1.player);
+            Data = new()
+            {
+                LastSteps = 0,
+                LastMilliseconds = 0,
+                LastSeed = (int)Game1.uniqueIDForThisGame,
+            };
         }
     }
 
@@ -59,14 +68,16 @@ internal sealed class ModEntry : Mod
         }
     }
 
+    /// <inheritdoc cref="IGameLoopEvents.Saving"/>
     private void OnSaving(object? sender, SavingEventArgs e)
     {
         if (Context.IsMainPlayer)
         {
             Data ??= new();
-            Data.Populate(Game1.player);
+            Data.Update(Game1.player);
 
             this.Helper.Data.WriteSaveData(nameof(Data), Data);
+            this.Broadcast();
         }
     }
 
@@ -78,10 +89,11 @@ internal sealed class ModEntry : Mod
             Data ??= this.Helper.Data.ReadSaveData<ModData>(nameof(Data)) ?? new();
             Data.PopulateIfBlank(Game1.player);
 
-            this.Broadcast(Data);
+            this.Broadcast();
         }
     }
 
+    /// <inheritdoc cref="IMultiplayerEvents.PeerConnected"/>
     private void PeerConnected(object? sender, PeerConnectedEventArgs e)
     {
         if (Data is null)
@@ -101,17 +113,18 @@ internal sealed class ModEntry : Mod
         }
     }
 
-    private void Broadcast(ModData data)
+    private void Broadcast()
     {
         this.Helper.Multiplayer.SendMessage(
-            data,
+            Data,
             nameof(Data),
             [this.ModManifest.UniqueID],
             this.Helper.Multiplayer.GetConnectedPlayers().Where(player => !player.IsSplitScreen).Select(player => player.PlayerID).ToArray()
         );
     }
 
-    private void Multiplayer_ModMessageReceived(object? sender, ModMessageReceivedEventArgs e)
+    /// <inheritdoc cref="IMultiplayerEvents.ModMessageReceived"/>
+    private void ModMessageReceived(object? sender, ModMessageReceivedEventArgs e)
     {
         if (e.FromModID != this.ModManifest.UniqueID || e.Type != nameof(Data))
         {
@@ -125,6 +138,7 @@ internal sealed class ModEntry : Mod
     /// <remarks>At this point, because Game1.random can be influenced by player behavior, it's "safe" to replace with an unseeded version.</remarks>
     private void OnDayStart(object? sender, DayStartedEventArgs e)
     {
+        // fish in C will attempt to "rewind" the random. Thus, we give it a new instance of Random it can use without affecting Random.Shared.
         Game1.random = this.Helper.ModRegistry.IsLoaded("focustense.FishinC") ? new Random() : Random.Shared;
         GameLocationForagePatch.Reset();
     }

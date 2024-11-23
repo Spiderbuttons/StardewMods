@@ -3,6 +3,7 @@
 
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -11,7 +12,6 @@
     <Description>Automated Screenshots</Description>
     <Version>0.1.0</Version>
     <UpdateKeys>-1</UpdateKeys>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
