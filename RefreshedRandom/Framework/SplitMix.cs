@@ -13,10 +13,13 @@ internal ref struct SplitMix
 
     internal ulong Next()
     {
-        ulong ret = this.seed += 0x9E3779B97F4A7C15;
-        ret = (ret ^ (ret >> 30)) * 0xBF58476D1CE4E5B9;
-        ret = (ret ^ (ret >> 27)) * 0x94D049BB133111EB;
-
+        ulong ret;
+        unchecked
+        {
+            ret = this.seed += 0x9E3779B97F4A7C15;
+            ret = (ret ^ (ret >> 30)) * 0xBF58476D1CE4E5B9;
+            ret = (ret ^ (ret >> 27)) * 0x94D049BB133111EB;
+        }
         return ret;
     }
 }

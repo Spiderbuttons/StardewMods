@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Name>ReferesreshedRandom</Name>
+    <Name>Refreshed Random</Name>
     <Description>Adjusts Stardew's random to feel more random.</Description>
     <Version>0.1.0</Version>
     <UpdateKeys>-1</UpdateKeys>

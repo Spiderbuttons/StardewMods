@@ -18,52 +18,120 @@ internal static class SeededXoshiroFactory
     /// <summary>
     /// Seeds an Xoshiro random.
     /// </summary>
-    private static Lazy<Func<byte[], Random?>> _generateSeededRandom = new(() => {
+    private static Func<byte[], Random> _generateSeededRandom = null!;
+
+    /// <summary>
+    /// Generates a method that creates a seeded xoshiro Random.
+    /// </summary>
+    internal static void GenerateRandomGenerator()
+    {
         Type randomType = typeof(Random);
         Type xoshiroImpl = randomType.GetNestedType("XoshiroImpl", BindingFlags.NonPublic) ?? throw new NullReferenceException("XoshiroImpl");
+        FieldInfo backing = randomType.GetField("_impl", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new NullReferenceException("_impl");
         FieldInfo[] backingfields = (new string[] { "_s0", "_s1", "_s2", "_s3" })
                                         .Select(f => xoshiroImpl.GetField(f, BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new NullReferenceException(f))
                                         .ToArray();
 
-        var fieldType = backingfields[0].FieldType;
+        Type fieldType = backingfields[0].FieldType;
         int width;
-        if (fieldType == typeof(uint) || fieldType == typeof(int))
+        Type typeForSpan;
+        if (fieldType == typeof(uint))
         {
             width = 4;
+            typeForSpan = fieldType;
         }
-        else if (fieldType == typeof(ulong) || fieldType == typeof(long))
+        else if (fieldType == typeof(int))
+        {
+            width = 4;
+            typeForSpan = typeof(uint);
+        }
+        else if (fieldType == typeof(ulong))
         {
             width = 8;
+            typeForSpan = fieldType;
+        }
+        else if (fieldType == typeof(long))
+        {
+            width = 8;
+
+            typeForSpan = typeof(ulong);
         }
         else
         {
             throw new InvalidOperationException($"{fieldType.FullName} is not a type we can process.");
         }
 
-
-
-        Type sCoreType = Type.GetType("StardewModdingAPI.Framework.SCore,StardewModdingAPI")!;
-        Type commandQueueType = Type.GetType("StardewModdingAPI.Framework.CommandQueue,StardewModdingAPI")!;
-        MethodInfo sCoreGetter = sCoreType.GetProperty("Instance", BindingFlags.NonPublic | BindingFlags.Static)!.GetGetMethod(true)!;
-        FieldInfo rawCommandQueueField = sCoreType.GetField("RawCommandQueue", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        MethodInfo queueAddMethod = commandQueueType.GetMethod("Add", BindingFlags.Public | BindingFlags.Instance)!;
+        MethodInfo uninitConstr = typeof(FormatterServices).GetMethod(nameof(FormatterServices.GetUninitializedObject)) ?? throw new NullReferenceException("uninit constr");
+        MethodInfo getTypeHandle = typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)) ?? throw new NullReferenceException("type from handle");
 
         DynamicMethod method = new("GenerateSeededRandom", typeof(Random), [typeof(byte[])]);
         ILGenerator il = method.GetILGenerator();
         var ret = il.DeclareLocal(randomType);
-        il.Emit(OpCodes.Newobj, randomType.GetConstructor(BindingFlags.Instance| BindingFlags.Public, Type.EmptyTypes)!);
+        var randomimpl = il.DeclareLocal(xoshiroImpl);
+        var spantype = typeof(Span<>).MakeGenericType(typeForSpan);
+        var span = il.DeclareLocal(spantype);
+        var span_getter = spantype.GetMethod("get_Item") ?? throw new NullReferenceException("span getter");
+
+        var mixerMethod = typeof(SeededXoshiroFactory).GetMethod(width == 8 ? nameof(SplitMix256) : nameof(SplitMix128), BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new NullReferenceException("mixer method");
+
+        // create empty random instance
+        il.Emit(OpCodes.Ldtoken, typeof(Random));
+        il.Emit(OpCodes.Call, getTypeHandle);
+        il.Emit(OpCodes.Call, uninitConstr);
         il.Emit(OpCodes.Stloc, ret);
 
+        // create empty xoshiro
+        il.Emit(OpCodes.Ldtoken, xoshiroImpl);
+        il.Emit(OpCodes.Call, getTypeHandle);
+        il.Emit(OpCodes.Call, uninitConstr);
+        il.Emit(OpCodes.Stloc, randomimpl);
+
+        // generate span for mixing.
+        il.Emit(OpCodes.Ldc_I4, 4 * width);
+        il.Emit(OpCodes.Conv_U);
+        il.Emit(OpCodes.Localloc);
+
+        il.Emit(OpCodes.Ldc_I4_4);
+        il.Emit(OpCodes.Newobj, spantype.GetConstructor([typeof(void*), typeof(int)]) ?? throw new NullReferenceException("span ctor"));
+        il.Emit(OpCodes.Stloc, span);
+
+        // generate seed from the byte array
+        il.Emit(OpCodes.Ldarg_0);
+        il.Emit(OpCodes.Call, typeof(SeededXoshiroFactory).GetMethod(nameof(Hash), BindingFlags.Static | BindingFlags.NonPublic) ?? throw new NullReferenceException("hasher"));
+
+        // call mixer
+        il.Emit(OpCodes.Ldloc, span);
+        il.Emit(OpCodes.Call, mixerMethod);
+
+        // assign to the xoshiro
+        for (int i = 0; i < backingfields.Length; i++)
+        {
+            il.Emit(OpCodes.Ldloc, randomimpl);
+            il.Emit(OpCodes.Ldloca, span);
+            il.Emit(OpCodes.Ldc_I4, i);
+            il.Emit(OpCodes.Call, span_getter);
+            il.Emit(width == 8 ? OpCodes.Ldind_I8 : OpCodes.Ldind_I4);
+            il.Emit(OpCodes.Stfld, backingfields[i]);
+        }
+
+        // assign the xoshiro to the Random instance.
+        il.Emit(OpCodes.Ldloc, ret);
+        il.Emit(OpCodes.Ldloc, randomimpl);
+        il.Emit(OpCodes.Stfld, backing);
+
+        // load the random instance and return it.
         il.Emit(OpCodes.Ldloc, ret);
         il.Emit(OpCodes.Ret);
-        return method.CreateDelegate<Func<byte[], Random?>>();
-    });
-
-    internal static Random Generate(byte[] seed)
-    {
-        Random rnd = new Random();
-        return rnd;
+        _generateSeededRandom = method.CreateDelegate<Func<byte[], Random>>();
     }
+
+    /// <summary>
+    /// Generates a seeded xoshiro random using the given bytes as the seed.
+    /// </summary>
+    /// <param name="seed">Seed to use.</param>
+    /// <returns>Seeded random.</returns>
+    internal static Random Generate(byte[] seed) => _generateSeededRandom.Invoke(seed);
 
     private static ulong Hash(byte[] seed) => BitConverter.ToUInt64(Hasher.Value!.ComputeHash(seed));
 

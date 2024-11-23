@@ -25,11 +25,34 @@ internal sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         ModMonitor = this.Monitor;
+        helper.Events.GameLoop.DayStarted += this.OnDayStart;
+
+        try
+        {
+            SeededXoshiroFactory.GenerateRandomGenerator();
+            this.Monitor.Log("okay, xoshiro generator made.");
+
+#if DEBUG
+            this.Monitor.Log($"Generating test random");
+            byte[] bytes = BitConverter.GetBytes(0xdeadbeef);
+            Random random = SeededXoshiroFactory.Generate(bytes);
+            for (int i = 0; i < 10; i++)
+            {
+                this.Monitor.Log($"{random.Next():X8}");
+            }
+#endif
+        }
+        catch (Exception ex)
+        {
+            // okay, something went very wrong. No other init will be made.
+            this.Monitor.Log($"The seeded xoshiro generator could not be made. This mod may not function as intended. See log for details.", LogLevel.Error);
+            this.Monitor.Log(ex.ToString());
+            return;
+        }
 
         helper.Events.Specialized.LoadStageChanged += this.OnLoadSaveChanged;
         helper.Events.GameLoop.SaveCreated += this.OnSaveCreate;
         helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
-        helper.Events.GameLoop.DayStarted += this.OnDayStart;
         helper.Events.GameLoop.Saving += this.OnSaving;
 
         // multiplayer
