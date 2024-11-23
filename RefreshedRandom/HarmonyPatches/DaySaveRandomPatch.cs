@@ -26,8 +26,8 @@ internal static class DaySaveRandomPatch
         block[3] = (int)seedA;
         block[4] = (int)seedB;
         block[5] = (int)seedC;
-        block[6] = data.LastDayMilliseconds;
-        block[7] = data.LastDaySteps;
+        block[6] = data.LastMilliseconds;
+        block[7] = data.LastSteps;
 
         var seed = Game1.hash.GetDeterministicHashCode(block);
         __result = new Random(seed); // todo find better random.

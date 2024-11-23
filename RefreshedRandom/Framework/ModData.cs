@@ -1,18 +1,59 @@
-﻿namespace RefreshedRandom.Framework;
+﻿
+using System.Security.Cryptography;
+
+namespace RefreshedRandom.Framework;
 
 /// <summary>
 /// The data for this mod.
 /// </summary>
 public sealed class ModData
 {
-    /// <summary>
-    /// The cached number of ms the player has played.
-    /// </summary>
-    public int LastDayMilliseconds { get; set; } = -1;
+    private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
 
     /// <summary>
-    /// The cached number of steps the player has taken.
+    /// Gets or sets the cached number of ms the player has played.
     /// </summary>
-    public int LastDaySteps { get; set; } = -1;
+    public int LastMilliseconds { get; set; } = -1;
 
+    /// <summary>
+    /// Gets or sets the cached number of steps the player has taken.
+    /// </summary>
+    public int LastSteps { get; set; } = -1;
+
+    /// <summary>
+    /// Gets or sets a value generated randomly once per day.
+    /// </summary>
+    public int LastSeed { get; set; }
+
+    public ModData()
+    {
+        this.LastSeed = GenerateSeed();
+    }
+
+    internal void Populate(Farmer player)
+    {
+        this.LastMilliseconds = (int)(player.millisecondsPlayed ^ (player.millisecondsPlayed << 32));
+        this.LastSteps = (int)player.stats.StepsTaken;
+        this.LastSeed = GenerateSeed();
+    }
+
+    internal void PopulateIfBlank(Farmer player)
+    {
+        if (this.LastMilliseconds < 0)
+        {
+            this.LastMilliseconds = (int)(player.millisecondsPlayed ^ (player.millisecondsPlayed << 32));
+        }
+
+        if (this.LastSteps < 0)
+        {
+            this.LastSteps = (int)player.stats.StepsTaken;
+        }
+    }
+
+    private static int GenerateSeed()
+    {
+        Span<byte> buffer = stackalloc byte[4];
+        rng.GetBytes(buffer);
+        return BitConverter.ToInt32(buffer);
+    }
 }

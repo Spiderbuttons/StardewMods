@@ -4,6 +4,7 @@
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableHarmony>true</EnableHarmony>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -14,7 +15,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json" HintPath="$(GamePath)\smapi-internal\Newtonsoft.Json.dll" private="false" />
+    <Reference Include="System.Data.HashFunction.xxHash" HintPath="$(GamePath)\System.Data.HashFunction.xxHash.dll" private="false"></Reference>
+    <Reference Include="System.Data.HashFunction.Interfaces" HintPath="$(GamePath)\System.Data.HashFunction.Interfaces.dll" private="false"></Reference>
+    <Reference Include="System.Data.HashFunction.Core" HintPath="$(GamePath)\System.Data.HashFunction.Core.dll" private="false"></Reference>
   </ItemGroup>
 
   <ItemGroup>

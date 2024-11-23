@@ -28,8 +28,8 @@ internal static class IntervalRandomPatch
             block[1] = (int)Game1.uniqueIDForThisGame;
             block[2] = (int)(Game1.uniqueIDForThisGame << 32);
             block[3] = (int)Game1.stats.DaysPlayed;
-            block[4] = data.LastDayMilliseconds;
-            block[5] = data.LastDaySteps;
+            block[4] = data.LastMilliseconds;
+            block[5] = data.LastSteps;
 
             int seed = Game1.hash.GetDeterministicHashCode(block);
             error = null;
