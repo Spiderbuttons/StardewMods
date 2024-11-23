@@ -59,10 +59,12 @@ internal sealed class ModEntry : Mod
         helper.Events.Multiplayer.PeerConnected += this.PeerConnected;
         helper.Events.Multiplayer.ModMessageReceived += this.ModMessageReceived;
 
+        // apply patches.
         Harmony harmony = new(this.ModManifest.UniqueID);
         DaySaveRandomPatch.ApplyPatch(harmony);
-        IntervalRandomPatch.ApplyPatch(harmony);
         GameLocationForagePatch.ApplyPatch(harmony);
+        IntervalRandomPatch.ApplyPatch(harmony);
+        RandomSeedGeneratorPatch.ApplyPatch(harmony);
     }
 
     /// <inheritdoc cref="IGameLoopEvents.SaveCreated"/>

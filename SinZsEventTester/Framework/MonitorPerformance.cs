@@ -1,26 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 using Microsoft.Xna.Framework;
 
 using StardewModdingAPI.Events;
 
 namespace SinZsEventTester.Framework;
+
+/// <summary>
+/// A class that handles a performance-monitoring overlay.
+/// </summary>
 internal sealed class MonitorPerformance : IDisposable
 {
     private IGameLoopEvents gameLoopEvents;
     private IDisplayEvents displayEvents;
-    private IMonitor monitor;
 
     private int frames = 0;
     private string framerate = "--";
 
-    private string RenderTime = "--";
-    private string UpdateTime = "--";
+    private string renderTime = "--";
+    private string updateTime = "--";
 
     private readonly Stopwatch renderWatch = new();
     private readonly Stopwatch updateWatch = new();
@@ -28,11 +26,10 @@ internal sealed class MonitorPerformance : IDisposable
     private readonly float renderWidth;
     private readonly float updateWidth;
 
-    public MonitorPerformance(IGameLoopEvents gameLoopEvents, IDisplayEvents displayEvents, IMonitor monitor)
+    public MonitorPerformance(IGameLoopEvents gameLoopEvents, IDisplayEvents displayEvents)
     {
         this.gameLoopEvents = gameLoopEvents;
         this.displayEvents = displayEvents;
-        this.monitor = monitor;
 
         this.gameLoopEvents.UpdateTicked += this.UpdateTicked;
         this.gameLoopEvents.UpdateTicking += this.UpdateTicking;
@@ -65,7 +62,6 @@ internal sealed class MonitorPerformance : IDisposable
 
             this.gameLoopEvents = null!;
             this.displayEvents = null!;
-            this.monitor = null!;
 
             this.IsDisposed = true;
         }
@@ -76,10 +72,10 @@ internal sealed class MonitorPerformance : IDisposable
         e.SpriteBatch.Draw(Game1.staminaRect, new Rectangle(0, 0, Game1.viewport.Width, 64), Color.Black * 0.5f);
 
         Vector2 drawloc = Vector2.One * 12;
-        e.SpriteBatch.DrawString(Game1.dialogueFont, this.RenderTime, drawloc, Color.White);
+        e.SpriteBatch.DrawString(Game1.dialogueFont, this.renderTime, drawloc, Color.White);
 
         drawloc.X += this.renderWidth;
-        e.SpriteBatch.DrawString(Game1.dialogueFont, this.UpdateTime, drawloc, Color.White);
+        e.SpriteBatch.DrawString(Game1.dialogueFont, this.updateTime, drawloc, Color.White);
 
         drawloc.X += this.updateWidth;
         e.SpriteBatch.DrawString(Game1.dialogueFont, this.framerate, drawloc, Color.White);
@@ -98,7 +94,7 @@ internal sealed class MonitorPerformance : IDisposable
         double ms = this.renderWatch.Elapsed.TotalMilliseconds;
         if (Game1.ticks % 5 == 0 || ms > 5)
         {
-            this.RenderTime = $"Render time: {ms:00.00} ms.";
+            this.renderTime = $"Render time: {ms:00.00} ms.";
         }
 
         this.frames += 1;
@@ -123,7 +119,7 @@ internal sealed class MonitorPerformance : IDisposable
         double ms = this.updateWatch.Elapsed.TotalMilliseconds;
         if (Game1.ticks % 5 == 0 || ms > 5)
         {
-            this.UpdateTime = $"Update time: {ms:00.00} ms.";
+            this.updateTime = $"Update time: {ms:00.00} ms.";
         }
     }
 

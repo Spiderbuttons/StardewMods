@@ -5,12 +5,16 @@ using System.Reflection.Emit;
 using System.Data.HashFunction;
 using System.Runtime.Serialization;
 
-// To create a seeded xoshiro, we first use xxhash64 to condense an array down to a single ulong
-// the use splitmix to expand it back to 128 or 256 bits.
-// xxhash 128 is not available in net 6 (and is probably too much work to backport).
-// 64 bits is probably enough entropy.
-// we can reconsider if it feels bad.
+/* To create a seeded xoshiro, we first use xxhash64 to condense an array down to a single ulong
+** the use splitmix to expand it back to 128 or 256 bits.
+** xxhash 128 is not available in net 6 (and is probably too much work to backport).
+** 64 bits is probably enough entropy.
+** we can reconsider if it feels bad.
+*/
 
+/// <summary>
+/// Generates seeded xoshiro randoms.
+/// </summary>
 internal static class SeededXoshiroFactory
 {
     private static readonly ThreadLocal<IHashFunction> Hasher = new(() => new xxHash(64));
@@ -35,25 +39,14 @@ internal static class SeededXoshiroFactory
         Type fieldType = backingfields[0].FieldType;
         int width;
         Type typeForSpan;
-        if (fieldType == typeof(uint))
-        {
-            width = 4;
-            typeForSpan = fieldType;
-        }
-        else if (fieldType == typeof(int))
+        if (fieldType == typeof(uint) || fieldType == typeof(int))
         {
             width = 4;
             typeForSpan = typeof(uint);
         }
-        else if (fieldType == typeof(ulong))
+        else if (fieldType == typeof(ulong) || fieldType == typeof(long))
         {
             width = 8;
-            typeForSpan = fieldType;
-        }
-        else if (fieldType == typeof(long))
-        {
-            width = 8;
-
             typeForSpan = typeof(ulong);
         }
         else
@@ -66,14 +59,12 @@ internal static class SeededXoshiroFactory
 
         DynamicMethod method = new("GenerateSeededRandom", typeof(Random), [typeof(byte[])]);
         ILGenerator il = method.GetILGenerator();
-        var ret = il.DeclareLocal(randomType);
-        var randomimpl = il.DeclareLocal(xoshiroImpl);
-        var spantype = typeof(Span<>).MakeGenericType(typeForSpan);
-        var span = il.DeclareLocal(spantype);
-        var span_getter = spantype.GetMethod("get_Item") ?? throw new NullReferenceException("span getter");
 
-        var mixerMethod = typeof(SeededXoshiroFactory).GetMethod(width == 8 ? nameof(SplitMix256) : nameof(SplitMix128), BindingFlags.NonPublic | BindingFlags.Static)
-            ?? throw new NullReferenceException("mixer method");
+        LocalBuilder ret = il.DeclareLocal(randomType);
+        LocalBuilder randomimpl = il.DeclareLocal(xoshiroImpl);
+
+        Type spantype = typeof(Span<>).MakeGenericType(typeForSpan);
+        LocalBuilder span = il.DeclareLocal(spantype);
 
         // create empty random instance
         il.Emit(OpCodes.Ldtoken, typeof(Random));
@@ -101,18 +92,25 @@ internal static class SeededXoshiroFactory
         il.Emit(OpCodes.Call, typeof(SeededXoshiroFactory).GetMethod(nameof(Hash), BindingFlags.Static | BindingFlags.NonPublic) ?? throw new NullReferenceException("hasher"));
 
         // call mixer
-        il.Emit(OpCodes.Ldloc, span);
-        il.Emit(OpCodes.Call, mixerMethod);
+        {
+            MethodInfo mixerMethod = typeof(SeededXoshiroFactory).GetMethod(width == 8 ? nameof(SplitMix256) : nameof(SplitMix128), BindingFlags.NonPublic | BindingFlags.Static)
+                ?? throw new NullReferenceException("mixer method");
+            il.Emit(OpCodes.Ldloc, span);
+            il.Emit(OpCodes.Call, mixerMethod);
+        }
 
         // assign to the xoshiro
-        for (int i = 0; i < backingfields.Length; i++)
         {
-            il.Emit(OpCodes.Ldloc, randomimpl);
-            il.Emit(OpCodes.Ldloca, span);
-            il.Emit(OpCodes.Ldc_I4, i);
-            il.Emit(OpCodes.Call, span_getter);
-            il.Emit(width == 8 ? OpCodes.Ldind_I8 : OpCodes.Ldind_I4);
-            il.Emit(OpCodes.Stfld, backingfields[i]);
+            MethodInfo span_getter = spantype.GetMethod("get_Item") ?? throw new NullReferenceException("span getter");
+            for (int i = 0; i < backingfields.Length; i++)
+            {
+                il.Emit(OpCodes.Ldloc, randomimpl);
+                il.Emit(OpCodes.Ldloca, span);
+                il.Emit(OpCodes.Ldc_I4, i);
+                il.Emit(OpCodes.Call, span_getter);
+                il.Emit(width == 8 ? OpCodes.Ldind_I8 : OpCodes.Ldind_I4);
+                il.Emit(OpCodes.Stfld, backingfields[i]);
+            }
         }
 
         // assign the xoshiro to the Random instance.
@@ -133,7 +131,12 @@ internal static class SeededXoshiroFactory
     /// <returns>Seeded random.</returns>
     internal static Random Generate(byte[] seed) => _generateSeededRandom.Invoke(seed);
 
-    private static ulong Hash(byte[] seed) => BitConverter.ToUInt64(Hasher.Value!.ComputeHash(seed));
+    /// <summary>
+    /// Gets the xxHash64 for the specific data.
+    /// </summary>
+    /// <param name="seed">Data in question.</param>
+    /// <returns>Hash.</returns>
+    internal static ulong Hash(byte[] seed) => BitConverter.ToUInt64(Hasher.Value!.ComputeHash(seed));
 
     private static void SplitMix256(ulong seed, Span<ulong> buffer)
     {
@@ -141,7 +144,7 @@ internal static class SeededXoshiroFactory
 
         for (int i = 0; i < buffer.Length; i++)
         {
-            var next = mixer.Next();
+            ulong next = mixer.Next();
             buffer[i] = next;
         }
     }
@@ -152,7 +155,7 @@ internal static class SeededXoshiroFactory
 
         for (int i = 0; i < buffer.Length; i++)
         {
-            var next = mixer.Next();
+            ulong next = mixer.Next();
             buffer[i] = (uint)next;
             if (buffer.Length > i + 1)
             {

@@ -1,24 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection.Emit;
 
 using HarmonyLib;
 
 namespace RefreshedRandom.HarmonyPatches;
+
+/// <summary>
+/// A patch on game location, to make forage more random.
+/// </summary>
 internal static class GameLocationForagePatch
 {
-
     private static int counter = 0;
 
+    /// <summary>
+    /// Applies the patches for this class.
+    /// </summary>
+    /// <param name="harmony">the mod's harmony instance.</param>
     internal static void ApplyPatch(Harmony harmony)
     {
-        harmony.Patch(AccessTools.Method(typeof(GameLocation), nameof(GameLocation.spawnObjects)),
+        harmony.Patch(
+            AccessTools.Method(typeof(GameLocation), nameof(GameLocation.spawnObjects)),
             transpiler: new(typeof(GameLocationForagePatch), nameof(Transpiler)));
     }
 
+    /// <summary>
+    /// Resets the counter.
+    /// </summary>
     internal static void Reset() => Interlocked.Exchange(ref counter, 0);
 
     private static double GetValue() => Interlocked.Increment(ref counter);
@@ -26,7 +32,7 @@ internal static class GameLocationForagePatch
     private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
     {
         bool found = false;
-        foreach (var instruction in instructions)
+        foreach (CodeInstruction instruction in instructions)
         {
             if (!found && instruction.opcode == OpCodes.Ldc_R8 && instruction.operand is double v && v == 0.0)
             {

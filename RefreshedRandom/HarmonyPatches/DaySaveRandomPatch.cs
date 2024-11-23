@@ -1,10 +1,11 @@
-﻿
-namespace RefreshedRandom.HarmonyPatches;
+﻿namespace RefreshedRandom.HarmonyPatches;
 using HarmonyLib;
+
+using RefreshedRandom.Framework;
 
 internal static class DaySaveRandomPatch
 {
-    private static readonly int[] block = new int[8];
+    private static readonly ThreadLocal<byte[]> block = new(() => new byte[48]);
 
     internal static void ApplyPatch(Harmony harmony)
     {
@@ -20,17 +21,43 @@ internal static class DaySaveRandomPatch
             return true;
         }
 
-        block[0] = (int)Game1.stats.DaysPlayed;
-        block[1] = (int)Game1.uniqueIDForThisGame;
-        block[2] = (int)(Game1.uniqueIDForThisGame << 32);
-        block[3] = (int)seedA;
-        block[4] = (int)seedB;
-        block[5] = (int)seedC;
-        block[6] = data.LastMilliseconds;
-        block[7] = data.LastSteps;
+        try
+        {
+            var buff = block.Value!;
+            var span = new Span<byte>(buff);
 
-        var seed = Game1.hash.GetDeterministicHashCode(block);
-        __result = new Random(seed); // todo find better random.
-        return false;
+            BitConverter.TryWriteBytes(span, Game1.stats.DaysPlayed);
+            span = span[4..];
+
+            BitConverter.TryWriteBytes(span, Game1.uniqueIDForThisGame);
+            span = span[8..];
+
+            BitConverter.TryWriteBytes(span, seedA);
+            span = span[8..];
+
+            BitConverter.TryWriteBytes(span, seedB);
+            span = span[8..];
+
+            BitConverter.TryWriteBytes(span, seedC);
+            span = span[8..];
+
+            BitConverter.TryWriteBytes(span, data.LastMilliseconds);
+            span = span[4..];
+
+            BitConverter.TryWriteBytes(span, data.LastSteps);
+            span = span[4..];
+
+            BitConverter.TryWriteBytes(span, data.LastSeed);
+
+            ModEntry.ModMonitor.VerboseLog($"Requested day save random with seed {string.Join("-", buff.Select(a => a.ToString("X2")))}");
+
+            __result = SeededXoshiroFactory.Generate(buff);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            ModEntry.ModMonitor.Log($"Mod failed while attempting to override a day save random: {ex}.", LogLevel.Error);
+            return true;
+        }
     }
 }

@@ -360,7 +360,7 @@ public sealed class ModEntry : Mod
     {
         if (this.performanceMonitor is null || this.performanceMonitor.IsDisposed)
         {
-            this.performanceMonitor = new(this.Helper.Events.GameLoop, this.Helper.Events.Display, this.Monitor);
+            this.performanceMonitor = new(this.Helper.Events.GameLoop, this.Helper.Events.Display);
         }
         else
         {
