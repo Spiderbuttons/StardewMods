@@ -2,18 +2,22 @@
 
 using StardewValley.Extensions;
 
+using RefreshedRandom.Framework;
+using System.Text;
+
 namespace RefreshedRandom.HarmonyPatches;
 internal static class IntervalRandomPatch
 {
-    private static readonly int[] block = new int[6];
+    private static readonly ThreadLocal<byte[]> Buffer = new(() => new byte[32]);
 
     internal static void ApplyPatch(Harmony harmony)
     {
-        harmony.Patch(AccessTools.Method(typeof(Utility), nameof(Utility.TryCreateIntervalRandom)),
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Utility), nameof(Utility.TryCreateIntervalRandom)),
             prefix: new(typeof(IntervalRandomPatch), nameof(Prefix)));
     }
 
-    private static bool Prefix(string interval, string key, ref Random? random, ref string? error)
+    private static bool Prefix(string interval, string key, ref Random? random, ref string? error, ref bool __result)
     {
         if (interval is null)
         {
@@ -22,20 +26,44 @@ internal static class IntervalRandomPatch
             return false;
         }
 
-        if (interval.EqualsIgnoreCase("day") && ModEntry.Data is { } data)
+        try
         {
-            block[0] = key is null ? 0 : Game1.hash.GetDeterministicHashCode(key);
-            block[1] = (int)Game1.uniqueIDForThisGame;
-            block[2] = (int)(Game1.uniqueIDForThisGame << 32);
-            block[3] = (int)Game1.stats.DaysPlayed;
-            block[4] = data.LastMilliseconds;
-            block[5] = data.LastSteps;
 
-            int seed = Game1.hash.GetDeterministicHashCode(block);
-            error = null;
-            random = new Random(seed);
+            if (interval.EqualsIgnoreCase("day") && ModEntry.Data is { } data)
+            {
+                byte[] buffer = Buffer.Value!;
+                Span<byte> span = new(buffer);
 
-            return false;
+                if (key is not null)
+                {
+                    BitConverter.TryWriteBytes(span, SeededXoshiroFactory.Hash(Encoding.UTF8.GetBytes(key)));
+                }
+                span = span[8..];
+
+                BitConverter.TryWriteBytes(span, Game1.uniqueIDForThisGame);
+                span = span[8..];
+
+                BitConverter.TryWriteBytes(span, Game1.stats.DaysPlayed);
+                span = span[4..];
+
+                BitConverter.TryWriteBytes(span, data.LastSteps);
+                span = span[4..];
+
+                BitConverter.TryWriteBytes(span, data.LastMilliseconds);
+                span = span[4..];
+
+                BitConverter.TryWriteBytes(span, data.LastSeed);
+
+                error = null;
+                random = SeededXoshiroFactory.Generate(buffer);
+                ModEntry.ModMonitor.VerboseLog($"Interval random requested: {string.Join('-', buffer.Select(a => a.ToString("X2")))}");
+                __result = true;
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            ModEntry.ModMonitor.Log($"Mod failed while trying to override the interval random generator: {ex}", LogLevel.Error);
         }
 
         return true;

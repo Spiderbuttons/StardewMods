@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-
-using StardewModdingAPI.Utilities;
+﻿using StardewModdingAPI.Utilities;
 
 namespace NPCArrows.Framework.NPCs;
 

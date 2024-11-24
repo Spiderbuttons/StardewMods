@@ -16,7 +16,6 @@ using Microsoft.Xna.Framework;
 using PamTries.Framework;
 
 #if DEBUG
-using PamTries.HarmonyPatches;
 #endif
 
 using StardewModdingAPI.Events;

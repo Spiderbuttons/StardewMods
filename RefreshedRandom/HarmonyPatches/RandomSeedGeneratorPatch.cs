@@ -1,25 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using HarmonyLib;
+﻿using HarmonyLib;
 
 using RefreshedRandom.Framework;
 
-using StardewValley;
-
 namespace RefreshedRandom.HarmonyPatches;
+
+/// <summary>
+/// Patches on <see cref="Utility"/>'s Random generator.
+/// </summary>
 internal static class RandomSeedGeneratorPatch
 {
-    private static ThreadLocal<byte[]> buffer = new(() => new byte[40]);
+    private static readonly ThreadLocal<byte[]> Buffer = new(() => new byte[40]);
 
+    /// <summary>
+    /// Applies the patches for this class.
+    /// </summary>
+    /// <param name="harmony">Harmony instance.</param>
     internal static void ApplyPatch(Harmony harmony)
     {
         harmony.Patch(
             AccessTools.Method(typeof(Utility), nameof(Utility.CreateRandomSeed)),
             prefix: new(typeof(RandomSeedGeneratorPatch), nameof(PrefixCreateRandomSeed))
+            );
+
+        harmony.Patch(
+            AccessTools.Method(typeof(Utility), nameof(Utility.CreateRandom)),
+            prefix: new(typeof(RandomSeedGeneratorPatch), nameof(PrefixCreateRandom))
             );
     }
 
@@ -32,7 +37,7 @@ internal static class RandomSeedGeneratorPatch
             {
                 __result = (int)(seed ^ (seed >> 32));
             }
-            ModEntry.ModMonitor.VerboseLog($"Seed generation requested, was {__result}");
+            ModEntry.ModMonitor.VerboseLog($"Seed generation requested: {__result}");
 
             return false;
         }
@@ -43,11 +48,28 @@ internal static class RandomSeedGeneratorPatch
         }
     }
 
+    private static bool PrefixCreateRandom(double seedA, double seedB, double seedC, double seedD, double seedE, ref Random __result)
+    {
+        try
+        {
+            byte[] buff = GetSeed(seedA, seedB, seedC, seedD, seedE);
+            __result = SeededXoshiroFactory.Generate(buff);
+            ModEntry.ModMonitor.VerboseLog($"Random generation requested: {string.Join('-', buff.Select(a => a.ToString("X2")))}");
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            ModEntry.ModMonitor.Log($"Mod failed while attempting to override random generation: {ex}", LogLevel.Error);
+            return true;
+        }
+    }
+
     // write the whole seed to a byte array.
     private static byte[] GetSeed(double seedA, double seedB, double seedC, double seedD, double seedE)
     {
-        var buff = buffer.Value!;
-        var span = new Span<byte>(buff);
+        byte[] buff = Buffer.Value!;
+        Span<byte> span = new(buff);
 
         BitConverter.TryWriteBytes(span, seedA);
         span = span[8..];

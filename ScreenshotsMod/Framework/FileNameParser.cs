@@ -3,9 +3,6 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-using AtraBase.Toolkit;
-using AtraBase.Toolkit.StringHandler;
-
 using StardewModdingAPI.Utilities;
 
 using StardewValley;

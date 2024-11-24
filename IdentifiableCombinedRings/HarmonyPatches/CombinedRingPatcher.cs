@@ -7,7 +7,6 @@ using AtraShared.Utils.Extensions;
 
 using HarmonyLib;
 
-using IdentifiableCombinedRings.DataModels;
 using IdentifiableCombinedRings.Framework;
 
 using Microsoft.Xna.Framework;

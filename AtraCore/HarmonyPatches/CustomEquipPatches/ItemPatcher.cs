@@ -3,7 +3,6 @@
 namespace AtraCore.HarmonyPatches.CustomEquipPatches;
 
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 using AtraBase.Toolkit;

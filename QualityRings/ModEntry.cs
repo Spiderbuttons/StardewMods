@@ -1,7 +1,7 @@
 ﻿using AtraCore.Framework.Internal;
 
 using AtraShared.Integrations;
-using SpaceCore;
+
 using StardewModdingAPI.Events;
 
 namespace QualityRings;

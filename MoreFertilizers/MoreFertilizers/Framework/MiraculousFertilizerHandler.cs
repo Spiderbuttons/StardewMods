@@ -1,9 +1,5 @@
 ﻿using AtraBase.Toolkit.Extensions;
 
-using AtraCore;
-
-using AtraShared.ConstantsAndEnums;
-
 using Microsoft.Xna.Framework;
 
 namespace MoreFertilizers.Framework;

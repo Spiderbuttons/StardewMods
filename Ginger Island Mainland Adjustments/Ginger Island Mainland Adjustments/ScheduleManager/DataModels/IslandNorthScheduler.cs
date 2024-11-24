@@ -4,9 +4,10 @@ using AtraBase.Toolkit.Extensions;
 
 using AtraShared.Schedules.DataModels;
 using AtraShared.Utils.Extensions;
+
 using GingerIslandMainlandAdjustments.CustomConsoleCommands;
+
 using Microsoft.Xna.Framework;
-using StardewModdingAPI.Utilities;
 
 namespace GingerIslandMainlandAdjustments.ScheduleManager.DataModels;
 

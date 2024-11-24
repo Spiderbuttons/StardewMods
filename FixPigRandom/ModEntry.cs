@@ -15,11 +15,6 @@ using HarmonyLib;
 
 using Microsoft.Xna.Framework;
 
-using Netcode;
-
-using StardewValley.Network;
-using StardewValley.TerrainFeatures;
-
 namespace FixPigRandom;
 
 /// <inheritdoc />

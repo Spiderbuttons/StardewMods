@@ -1,9 +1,4 @@
-﻿using AtraBase.Toolkit.Extensions;
-using AtraBase.Toolkit.StringHandler;
-
-using AtraCore.Framework.ItemManagement;
-
-using AtraShared.Utils.Extensions;
+﻿using AtraShared.Utils.Extensions;
 
 using Microsoft.Xna.Framework;
 

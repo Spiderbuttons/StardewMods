@@ -1,6 +1,4 @@
-﻿using AtraShared.Utils.Extensions;
-
-using StardewModdingAPI.Events;
+﻿using StardewModdingAPI.Events;
 
 using StardewValley.TerrainFeatures;
 

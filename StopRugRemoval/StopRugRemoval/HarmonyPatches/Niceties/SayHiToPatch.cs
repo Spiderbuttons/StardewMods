@@ -1,11 +1,10 @@
 ﻿using AtraBase.Toolkit.Extensions;
 
-using AtraCore;
-
 using AtraShared.ConstantsAndEnums;
 using AtraShared.Utils.Extensions;
 
 using HarmonyLib;
+
 using Microsoft.Xna.Framework;
 
 namespace StopRugRemoval.HarmonyPatches.Niceties;

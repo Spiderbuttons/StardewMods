@@ -14,7 +14,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 
 using StardewValley.GameData.WildTrees;
-using StardewValley.Locations;
 using StardewValley.TerrainFeatures;
 
 /// <summary>

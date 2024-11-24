@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Data.HashFunction;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 
 /* To create a seeded xoshiro, we first use xxhash64 to condense an array down to a single ulong
 ** the use splitmix to expand it back to 128 or 256 bits.
@@ -17,12 +18,14 @@ using System.Runtime.Serialization;
 /// </summary>
 internal static class SeededXoshiroFactory
 {
+    internal static readonly RandomNumberGenerator RNG = RandomNumberGenerator.Create();
+
     private static readonly ThreadLocal<IHashFunction> Hasher = new(() => new xxHash(64));
 
     /// <summary>
     /// Seeds an Xoshiro random.
     /// </summary>
-    private static Func<byte[], Random> _generateSeededRandom = null!;
+    private static Func<byte[], Random> generateSeededRandom = null!;
 
     /// <summary>
     /// Generates a method that creates a seeded xoshiro Random.
@@ -121,7 +124,7 @@ internal static class SeededXoshiroFactory
         // load the random instance and return it.
         il.Emit(OpCodes.Ldloc, ret);
         il.Emit(OpCodes.Ret);
-        _generateSeededRandom = method.CreateDelegate<Func<byte[], Random>>();
+        generateSeededRandom = method.CreateDelegate<Func<byte[], Random>>();
     }
 
     /// <summary>
@@ -129,7 +132,7 @@ internal static class SeededXoshiroFactory
     /// </summary>
     /// <param name="seed">Seed to use.</param>
     /// <returns>Seeded random.</returns>
-    internal static Random Generate(byte[] seed) => _generateSeededRandom.Invoke(seed);
+    internal static Random Generate(byte[] seed) => generateSeededRandom.Invoke(seed);
 
     /// <summary>
     /// Gets the xxHash64 for the specific data.
@@ -153,7 +156,7 @@ internal static class SeededXoshiroFactory
     {
         SplitMix mixer = new(seed);
 
-        for (int i = 0; i < buffer.Length; i++)
+        for (int i = 0; i < buffer.Length; i += 2)
         {
             ulong next = mixer.Next();
             buffer[i] = (uint)next;

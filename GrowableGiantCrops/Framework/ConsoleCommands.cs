@@ -6,8 +6,6 @@ using AtraShared.Utils.Extensions;
 using GrowableGiantCrops.Framework.InventoryModels;
 using GrowableGiantCrops.HarmonyPatches.GrassPatches;
 
-using Microsoft.Xna.Framework.Graphics;
-
 using StardewValley.TerrainFeatures;
 
 namespace GrowableGiantCrops.Framework;

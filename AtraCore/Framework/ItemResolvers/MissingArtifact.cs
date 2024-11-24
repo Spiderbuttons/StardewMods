@@ -4,8 +4,6 @@ using AtraCore.HarmonyPatches.MuseumOverflow;
 
 using AtraShared.Utils.Extensions;
 
-using Microsoft.Xna.Framework.Input;
-
 using StardewModdingAPI;
 
 using StardewValley;

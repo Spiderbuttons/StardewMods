@@ -3,10 +3,17 @@ using HarmonyLib;
 
 using RefreshedRandom.Framework;
 
+/// <summary>
+/// Patches CreateDaySaveRandom to increase entropy.
+/// </summary>
 internal static class DaySaveRandomPatch
 {
-    private static readonly ThreadLocal<byte[]> block = new(() => new byte[48]);
+    private static readonly ThreadLocal<byte[]> Block = new(() => new byte[48]);
 
+    /// <summary>
+    /// Applies patches for this class.
+    /// </summary>
+    /// <param name="harmony">Harmony instance.</param>
     internal static void ApplyPatch(Harmony harmony)
     {
         harmony.Patch(
@@ -23,7 +30,7 @@ internal static class DaySaveRandomPatch
 
         try
         {
-            var buff = block.Value!;
+            var buff = Block.Value!;
             var span = new Span<byte>(buff);
 
             BitConverter.TryWriteBytes(span, Game1.stats.DaysPlayed);
@@ -49,7 +56,7 @@ internal static class DaySaveRandomPatch
 
             BitConverter.TryWriteBytes(span, data.LastSeed);
 
-            ModEntry.ModMonitor.VerboseLog($"Requested day save random with seed {string.Join("-", buff.Select(a => a.ToString("X2")))}");
+            ModEntry.ModMonitor.VerboseLog($"Requested day save random with seed {string.Join('-', buff.Select(a => a.ToString("X2")))}");
 
             __result = SeededXoshiroFactory.Generate(buff);
             return false;

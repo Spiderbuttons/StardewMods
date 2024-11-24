@@ -1,7 +1,5 @@
 ﻿// Ignore Spelling: API
 
-using AtraShared.ConstantsAndEnums;
-
 using CommunityToolkit.Diagnostics;
 
 using ExperimentalLagReduction.HarmonyPatches;

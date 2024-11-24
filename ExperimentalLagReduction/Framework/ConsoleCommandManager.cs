@@ -8,8 +8,6 @@ using AtraShared.Wrappers;
 
 using ExperimentalLagReduction.HarmonyPatches;
 
-using NetEscapades.EnumGenerators;
-
 namespace ExperimentalLagReduction.Framework;
 
 /// <summary>

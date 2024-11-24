@@ -1,8 +1,6 @@
 ﻿using AtraBase.Models.Result;
 using AtraBase.Toolkit.Extensions;
 
-using AtraCore;
-
 using AtraShared.ConstantsAndEnums;
 using AtraShared.Utils.Extensions;
 

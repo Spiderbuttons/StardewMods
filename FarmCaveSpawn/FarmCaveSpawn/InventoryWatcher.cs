@@ -1,6 +1,4 @@
-﻿using AtraBase.Toolkit.Extensions;
-
-using AtraShared.Wrappers;
+﻿using AtraShared.Wrappers;
 
 using StardewModdingAPI.Events;
 

@@ -1,6 +1,4 @@
-﻿using SpaceCore;
-
-namespace QualityRings.Framework;
+﻿namespace QualityRings.Framework;
 internal class CraftingSkill : Skills.Skill
 {
     public CraftingSkill()

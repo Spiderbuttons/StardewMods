@@ -1,11 +1,12 @@
 ﻿using System.Globalization;
 using System.Runtime.CompilerServices;
+
 using CommunityToolkit.Diagnostics;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI.Utilities;
 
-using StardewValley.GameData.Machines;
+using StardewModdingAPI.Utilities;
 
 namespace AtraShared.Utils;
 

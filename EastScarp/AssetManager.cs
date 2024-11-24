@@ -4,8 +4,6 @@ using EastScarp.Models;
 
 using StardewModdingAPI.Events;
 
-using StardewValley.GameData.Characters;
-
 /// <summary>
 /// Manages assets for this mod.
 /// </summary>

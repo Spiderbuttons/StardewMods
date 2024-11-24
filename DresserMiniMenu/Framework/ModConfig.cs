@@ -2,8 +2,6 @@
 
 using AtraBase.Toolkit;
 
-using AtraShared.Integrations.GMCMAttributes;
-
 namespace DresserMiniMenu.Framework;
 
 /// <summary>

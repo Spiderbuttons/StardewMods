@@ -8,7 +8,6 @@ using System.Xml.Serialization;
 using AtraBase.Toolkit.Extensions;
 using AtraBase.Toolkit.Reflection;
 
-using AtraCore;
 using AtraCore.Framework.Caches;
 using AtraCore.Framework.ReflectionManager;
 

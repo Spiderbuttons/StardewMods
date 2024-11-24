@@ -1,6 +1,7 @@
 ﻿using AtraShared.Integrations.Interfaces.ContentPatcher;
+
 using GingerIslandMainlandAdjustments.ScheduleManager;
-using GingerIslandMainlandAdjustments.Utils;
+
 using StardewValley.Locations;
 
 namespace GingerIslandMainlandAdjustments.Integrations;

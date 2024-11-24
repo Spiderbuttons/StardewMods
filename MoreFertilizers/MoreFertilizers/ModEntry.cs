@@ -14,13 +14,12 @@ using AtraShared.Integrations;
 using AtraShared.Integrations.Interfaces;
 using AtraShared.Menuing;
 using AtraShared.MigrationManager;
-using AtraShared.Utils;
 using AtraShared.Utils.Extensions;
-using AtraShared.Utils.Shims;
 
 using CommunityToolkit.Diagnostics;
 
 using HarmonyLib;
+
 using MoreFertilizers.DataModels.Legacy;
 using MoreFertilizers.Framework;
 using MoreFertilizers.HarmonyPatches;
@@ -34,7 +33,6 @@ using Newtonsoft.Json;
 
 using StardewModdingAPI.Events;
 
-using StardewValley.Buildings;
 using StardewValley.TerrainFeatures;
 
 using AtraUtils = AtraShared.Utils.Utils;

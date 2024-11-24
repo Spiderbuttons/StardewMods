@@ -1,17 +1,7 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
-
-using AtraCore.Framework.ReflectionManager;
-
-using AtraShared.ConstantsAndEnums;
-using AtraShared.Utils.Extensions;
-using AtraShared.Utils.HarmonyHelper;
+﻿using AtraShared.ConstantsAndEnums;
 
 using HarmonyLib;
 
-using Netcode;
-
-using StardewValley.Menus;
 using StardewValley.SpecialOrders;
 
 namespace StopRugRemoval.HarmonyPatches.Niceties.CrashHandling;

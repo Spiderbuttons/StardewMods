@@ -1,8 +1,4 @@
-﻿using AtraCore.Framework.ItemManagement;
-
-using AtraShared.ConstantsAndEnums;
-
-using StardewValley.Extensions;
+﻿using StardewValley.Extensions;
 using StardewValley.Objects;
 
 namespace CatGiftsRedux.Framework.Pickers;

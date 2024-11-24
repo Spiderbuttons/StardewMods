@@ -1,12 +1,7 @@
-﻿using AtraBase.Toolkit.Extensions;
-
-using AtraCore.Framework.ItemManagement;
-
-using AtraShared.Utils.Extensions;
+﻿using AtraShared.Utils.Extensions;
 
 using StardewValley.Extensions;
 using StardewValley.GameData.FarmAnimals;
-using StardewValley.Objects;
 
 namespace CatGiftsRedux.Framework.Pickers;
 

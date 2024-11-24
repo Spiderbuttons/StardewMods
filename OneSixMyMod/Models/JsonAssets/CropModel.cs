@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace OneSixMyMod.Models.JsonAssets;
+﻿namespace OneSixMyMod.Models.JsonAssets;
 public record CropModel(
     string Name,
     string? EnableWithMod,

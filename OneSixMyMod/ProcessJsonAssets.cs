@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 
-using Newtonsoft.Json;
-
 using OneSixMyMod.Models;
 using OneSixMyMod.Models.JsonAssets;
 

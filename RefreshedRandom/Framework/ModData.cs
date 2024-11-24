@@ -1,15 +1,10 @@
-﻿
-using System.Security.Cryptography;
-
-namespace RefreshedRandom.Framework;
+﻿namespace RefreshedRandom.Framework;
 
 /// <summary>
 /// The data for this mod.
 /// </summary>
 public sealed class ModData
 {
-    private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
-
     /// <summary>
     /// Gets or sets the cached number of ms the player has played.
     /// </summary>
@@ -53,7 +48,7 @@ public sealed class ModData
     private static int GenerateSeed()
     {
         Span<byte> buffer = stackalloc byte[4];
-        rng.GetBytes(buffer);
+        SeededXoshiroFactory.RNG.GetBytes(buffer);
         return BitConverter.ToInt32(buffer);
     }
 }

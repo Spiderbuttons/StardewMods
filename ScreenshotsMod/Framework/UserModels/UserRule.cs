@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-using ScreenshotsMod.Framework.ModModels;
+﻿using ScreenshotsMod.Framework.ModModels;
 
 namespace ScreenshotsMod.Framework.UserModels;
 

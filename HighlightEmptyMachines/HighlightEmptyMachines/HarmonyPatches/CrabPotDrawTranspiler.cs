@@ -1,14 +1,19 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+
 using AtraBase.Toolkit;
+
 using AtraCore.Framework.ReflectionManager;
-using AtraShared.ConstantsAndEnums;
+
 using AtraShared.Utils.Extensions;
 using AtraShared.Utils.HarmonyHelper;
+
 using HarmonyLib;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using StardewValley.Objects;
 
 namespace HighlightEmptyMachines.HarmonyPatches;
