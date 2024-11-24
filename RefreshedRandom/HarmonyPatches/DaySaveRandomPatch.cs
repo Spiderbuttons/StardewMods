@@ -1,7 +1,6 @@
 ﻿namespace RefreshedRandom.HarmonyPatches;
 using HarmonyLib;
-
-using RefreshedRandom.Framework;
+using RefreshedRandom.Framework.PRNG;
 
 /// <summary>
 /// Patches CreateDaySaveRandom to increase entropy.

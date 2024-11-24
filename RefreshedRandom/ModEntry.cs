@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 
 using RefreshedRandom.Framework;
+using RefreshedRandom.Framework.PRNG;
 using RefreshedRandom.HarmonyPatches;
 
 using StardewModdingAPI.Enums;
@@ -66,6 +67,9 @@ internal sealed class ModEntry : Mod
         IntervalRandomPatch.ApplyPatch(harmony);
         RandomSeedGeneratorPatch.ApplyPatch(harmony);
     }
+
+    /// <inheritdoc />
+    public override object? GetApi() => new API();
 
     /// <inheritdoc cref="IGameLoopEvents.SaveCreated"/>
     private void OnSaveCreate(object? sender, SaveCreatedEventArgs e)

@@ -1,4 +1,4 @@
-﻿namespace RefreshedRandom.Framework;
+﻿namespace RefreshedRandom.Framework.PRNG;
 
 using System.Reflection;
 using System.Reflection.Emit;

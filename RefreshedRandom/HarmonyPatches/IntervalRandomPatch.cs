@@ -1,9 +1,8 @@
 ﻿using HarmonyLib;
 
 using StardewValley.Extensions;
-
-using RefreshedRandom.Framework;
 using System.Text;
+using RefreshedRandom.Framework.PRNG;
 
 namespace RefreshedRandom.HarmonyPatches;
 internal static class IntervalRandomPatch

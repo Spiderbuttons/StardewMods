@@ -1,4 +1,6 @@
-﻿namespace RefreshedRandom.Framework;
+﻿using RefreshedRandom.Framework.PRNG;
+
+namespace RefreshedRandom.Framework;
 
 /// <summary>
 /// The data for this mod.

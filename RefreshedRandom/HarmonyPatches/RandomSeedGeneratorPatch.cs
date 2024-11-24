@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
-
-using RefreshedRandom.Framework;
+using RefreshedRandom.Framework.PRNG;
 
 namespace RefreshedRandom.HarmonyPatches;
 
