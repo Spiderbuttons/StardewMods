@@ -29,6 +29,11 @@ internal static class RandomSeedGeneratorPatch
 
     private static bool PrefixCreateRandomSeed(double seedA, double seedB, double seedC, double seedD, double seedE, ref int __result)
     {
+        if (Game1.UseLegacyRandom)
+        {
+            return true;
+        }
+
         try
         {
             ulong seed = SeededXoshiroFactory.Hash(GetSeed(seedA, seedB, seedC, seedD, seedE));
@@ -49,6 +54,11 @@ internal static class RandomSeedGeneratorPatch
 
     private static bool PrefixCreateRandom(double seedA, double seedB, double seedC, double seedD, double seedE, ref Random __result)
     {
+        if (Game1.UseLegacyRandom)
+        {
+            return true;
+        }
+
         try
         {
             byte[] buff = GetSeed(seedA, seedB, seedC, seedD, seedE);

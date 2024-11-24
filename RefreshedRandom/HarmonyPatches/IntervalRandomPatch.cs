@@ -25,6 +25,11 @@ internal static class IntervalRandomPatch
             return false;
         }
 
+        if (Game1.UseLegacyRandom)
+        {
+            return true;
+        }
+
         try
         {
 

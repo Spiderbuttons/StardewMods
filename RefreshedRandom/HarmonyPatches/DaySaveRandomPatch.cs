@@ -27,6 +27,11 @@ internal static class DaySaveRandomPatch
             return true;
         }
 
+        if (Game1.UseLegacyRandom)
+        {
+            return true;
+        }
+
         try
         {
             var buff = Block.Value!;
