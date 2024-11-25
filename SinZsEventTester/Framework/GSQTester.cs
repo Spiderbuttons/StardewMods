@@ -14,12 +14,19 @@ namespace SinZsEventTester.Framework;
 /// </summary>
 /// <param name="monitor">The monitor instance to use.</param>
 /// <param name="reflector">SMAPI's reflection helper.</param>
-internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
+internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector, IGameContentHelper gameContent)
 {
     private static readonly Dictionary<string, Func<string, bool>> _additionalAssets = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Data/MineCarts"] = static name => Extensions.IsPossibleGSQString(name) || name is "MinecartsUnlocked",
         ["Data/Characters"] = static name => Extensions.IsPossibleGSQString(name) || name is "CanSocialize" or "CanVisitIsland" or "ItemDeliveryQuest" or "WinterStarParticipant" or "MinecartsUnlocked" || name.StartsWith("Spouse"),
+    };
+
+    private static readonly Dictionary<string, Func<string, string>> _itemQueryTransformers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Data/Locations"] = static item => item.Replace("BOBBER_X", "4").Replace("BOBBER_Y", "6").Replace("WATER_DEPTH", "5"),
+        ["Data/Machines"] = static item => item.Replace("DROP_IN_ID", "(O)69").Replace("DROP_IN_PRESERVE", "(O)69").Replace("NEARBY_FLOWER_ID", "597").Replace("DROP_IN_QUALITY", "4").Replace("DROP_IN", "74"),
+        ["Data/WildTrees"] = static item => item.Replace("PREVIOUS_OUTPUT_ID", "74"),
     };
 
     private readonly SObject puffer = new("128", 1);
@@ -62,7 +69,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
                 monitor.Log($"Checking {asset}", LogLevel.Info);
                 string[] breadcrumbs = [asset];
 
-                this.Process(data, breadcrumbs, _additionalAssets.GetValueOrDefault(asset) ?? Extensions.IsPossibleGSQString);
+                this.Process(data, breadcrumbs, _additionalAssets.GetValueOrDefault(asset) ?? Extensions.IsPossibleGSQString, _itemQueryTransformers.GetValueOrDefault(asset));
             }
         }
 
@@ -83,7 +90,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
                     continue;
                 }
 
-                this.Process(data, [asset], gsqfilter);
+                this.Process(data, [asset], gsqfilter, _itemQueryTransformers.GetValueOrDefault(asset));
             }
         }
         finally
@@ -106,7 +113,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 
         // create a new asset manager to avoid poisoning the one we're given.
         LocalizedContentManager temp = content.CreateTemporary();
-
+        asset = gameContent.ParseAssetName(asset).BaseName;
         try
         {
             object? data = temp.Load<object>(asset);
@@ -116,7 +123,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
                 return;
             }
 
-            this.Process(data, [asset], _additionalAssets.GetValueOrDefault(asset) ?? Extensions.IsPossibleGSQString);
+            this.Process(data, [asset], _additionalAssets.GetValueOrDefault(asset) ?? Extensions.IsPossibleGSQString, _itemQueryTransformers.GetValueOrDefault(asset));
         }
         catch (ContentLoadException)
         {
@@ -128,7 +135,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
         }
     }
 
-    private void Process(object data, string[] breadcrumbs, Func<string, bool> filter)
+    private void Process(object data, string[] breadcrumbs, Func<string, bool> filter, Func<string, string>? item_query_replacements)
     {
         if (data is null)
         {
@@ -137,7 +144,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 
         if (data is ISpawnItemData spawnable)
         {
-            this.CheckItemSpawn(spawnable, breadcrumbs);
+            this.CheckItemSpawn(spawnable, breadcrumbs, item_query_replacements);
             return;
         }
 
@@ -158,12 +165,12 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
             {
                 Type tkey = types.First();
                 MethodInfo processor = this.GetType().GetMethod(nameof(this.ProcessDictionary), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(tkey, dataType)!;
-                processor.Invoke(this, [data, breadcrumbs, filter]);
+                processor.Invoke(this, [data, breadcrumbs, filter, item_query_replacements]);
             }
             else if (t.GetGenericTypeDefinition() == typeof(List<>))
             {
                 MethodInfo processor = this.GetType().GetMethod(nameof(this.ProcessList), BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(dataType);
-                processor.Invoke(this, [data, breadcrumbs, filter]);
+                processor.Invoke(this, [data, breadcrumbs, filter, item_query_replacements]);
             }
             else
             {
@@ -176,11 +183,10 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
             {
                 if (field.Name == "ItemId" && field.FieldType == typeof(string))
                 {
-                    var itemID = (string?)field.GetValue(data);
-                    if (itemID is not null)
+                    if (field.GetValue(data) is string itemID)
                     {
                         monitor.Log($"Checking: {itemID}\n{breadcrumbs.Render()}", LogLevel.Info);
-                        this.CheckItemQuery(itemID, null, [.. breadcrumbs, field.Name]);
+                        this.CheckItemQuery(itemID, null, [.. breadcrumbs, field.Name], item_query_replacements);
                     }
                 }
                 else if (filter(field.Name) && field.FieldType == typeof(string))
@@ -191,7 +197,7 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
                 else if (!field.FieldType.IsValueType && (field.FieldType.IsGenericType || field.FieldType.Assembly!.GetName()!.Name!.Contains("StardewValley", StringComparison.OrdinalIgnoreCase)))
                 {
                     object f = field.GetValue(data)!;
-                    this.Process(f, [.. breadcrumbs, field.Name], filter);
+                    this.Process(f, [.. breadcrumbs, field.Name], filter, item_query_replacements);
                 }
             }
 
@@ -199,11 +205,10 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
             {
                 if (prop.Name == "ItemId" && prop.PropertyType == typeof(string))
                 {
-                    var itemID = (string?)prop.GetValue(data);
-                    if (itemID is not null)
+                    if (prop.GetValue(data) is string itemID)
                     {
                         monitor.Log($"Checking: {itemID}\n{breadcrumbs.Render()}", LogLevel.Info);
-                        this.CheckItemQuery(itemID, null, [.. breadcrumbs, prop.Name]);
+                        this.CheckItemQuery(itemID, null, [.. breadcrumbs, prop.Name], item_query_replacements);
                     }
                 }
                 if (filter(prop.Name) && prop.PropertyType == typeof(string))
@@ -214,22 +219,22 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
                 else if (!prop.PropertyType.IsValueType && (prop.PropertyType.IsGenericType || prop.PropertyType.Assembly!.GetName()!.Name!.Contains("StardewValley", StringComparison.OrdinalIgnoreCase)))
                 {
                     object f = prop.GetValue(data)!;
-                    this.Process(f, [.. breadcrumbs, prop.Name], filter);
+                    this.Process(f, [.. breadcrumbs, prop.Name], filter, item_query_replacements);
                 }
             }
         }
     }
 
-    private void ProcessDictionary<TKey, TValue>(Dictionary<TKey, TValue> data, string[] breadcrumbs, Func<string, bool> filter)
+    private void ProcessDictionary<TKey, TValue>(Dictionary<TKey, TValue> data, string[] breadcrumbs, Func<string, bool> filter, Func<string, string>? item_query_replacements)
         where TKey : notnull
     {
         foreach ((TKey k, TValue v) in data)
         {
-            this.Process(v!, [.. breadcrumbs, k.ToString()!], filter);
+            this.Process(v!, [.. breadcrumbs, k.ToString()!], filter, item_query_replacements);
         }
     }
 
-    private void ProcessList<T>(List<T> data, string[] breadcrumbs, Func<string, bool> filter)
+    private void ProcessList<T>(List<T> data, string[] breadcrumbs, Func<string, bool> filter, Func<string, string>? item_query_replacements)
     {
         for (int i = 0; i < data.Count; i++)
         {
@@ -243,13 +248,12 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
             id ??= (reflector.GetProperty<string>(v, "Id", false) ?? reflector.GetProperty<string>(v, "ID", false))?.GetValue();
             id ??= i.ToString()!;
 
-            this.Process(v!, [.. breadcrumbs, id], filter);
+            this.Process(v!, [.. breadcrumbs, id], filter, item_query_replacements);
         }
     }
 
-    private void CheckItemSpawn(ISpawnItemData spawnable, string[] breadcrumbs)
+    private void CheckItemSpawn(ISpawnItemData spawnable, string[] breadcrumbs, Func<string, string>? item_query_replacements)
     {
-
         string id = spawnable.RandomItemId is not null ? string.Join(", ", spawnable.RandomItemId) : spawnable.ItemId;
         monitor.Log($"Checking: {id} - {spawnable.PerItemCondition ?? "no per item condition"}\n{breadcrumbs.Render()}", LogLevel.Info);
 
@@ -263,23 +267,24 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
             return;
         }
 
-        if (spawnable.RandomItemId is { } ids)
+        if (spawnable.RandomItemId is not { } ids)
+        {
+            this.CheckItemQuery(spawnable.ItemId, spawnable.PerItemCondition, breadcrumbs, item_query_replacements);
+        }
+        else
         {
             string[] newBreadcrumbs = [.. breadcrumbs, "RandomItemId"];
             foreach (string? candidate in ids)
             {
-                this.CheckItemQuery(candidate, spawnable.PerItemCondition, [..newBreadcrumbs, candidate]);
+                this.CheckItemQuery(candidate, spawnable.PerItemCondition, [.. newBreadcrumbs, candidate], item_query_replacements);
             }
-            return;
         }
-
-        this.CheckItemQuery(spawnable.ItemId, spawnable.PerItemCondition, breadcrumbs);
     }
 
-    private void CheckItemQuery(string query, string? perItemCondition, string[] breadcrumbs)
+    private void CheckItemQuery(string query, string? perItemCondition, string[] breadcrumbs, Func<string, string>? per_asset_replacements)
     {
         ItemQueryContext context = new(Game1.currentLocation, Game1.player, Random.Shared, breadcrumbs.Render());
-        string tokenized_query = query.Replace("BOBBER_X", "4").Replace("BOBBER_Y", "6").Replace("WATER_DEPTH", "5").Replace("DROP_IN_ID", "(O)69").Replace("DROP_IN_PRESERVE", "(O)69").Replace("NEARBY_FLOWER_ID", "597").Replace("DROP_IN_QUALITY", "4");
+        string tokenized_query = per_asset_replacements is null ? query : per_asset_replacements(query);
         ItemQueryResult[] result = ItemQueryResolver.TryResolve(
             tokenized_query,
             context,
@@ -324,13 +329,17 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
         {
             foreach (ItemQueryResult item in result)
             {
+                if (item.Item is PurchaseableKeyItem or MovieConcession)
+                {
+                    continue;
+                }
                 if (item.Item?.QualifiedItemId is not { } qid)
                 {
-                    monitor.Log($"{breadcrumbs.Render()} produced a null object.");
+                    monitor.Log($"{breadcrumbs.Render()} produced a null object.", LogLevel.Warn);
                 }
                 else if (ItemRegistry.GetData(qid) is null)
                 {
-                    monitor.Log($"{breadcrumbs.Render()} produced an error item, {qid}");
+                    monitor.Log($"{breadcrumbs.Render()} produced an error item, {qid}", LogLevel.Warn);
                 }
             }
         }
@@ -407,8 +416,18 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1400:Access modifier should be declared", Justification = "file is a valid access modifier.")]
 file static class Extensions
 {
+    /// <summary>
+    /// Renders a string array of breadcrumbs as something readable.
+    /// </summary>
+    /// <param name="breadcrumbs">breadcrumbs.</param>
+    /// <returns>string to print.</returns>
     internal static string Render(this string[] breadcrumbs) => string.Join("->", breadcrumbs);
 
+    /// <summary>
+    /// Default checker to see if something is a GSQ.
+    /// </summary>
+    /// <param name="name">the name of the field or property.</param>
+    /// <returns>true if likely gsq, false otherwise.</returns>
     internal static bool IsPossibleGSQString(this string name)
         => name.EndsWith("Condition");
 }

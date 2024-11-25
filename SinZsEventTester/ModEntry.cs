@@ -97,7 +97,7 @@ public sealed class ModEntry : Mod
             "Checks over the game's GSQ",
             (_, args) =>
             {
-                GSQTester checker = new(this.Monitor, this.Helper.Reflection);
+                GSQTester checker = new(this.Monitor, this.Helper.Reflection, this.Helper.GameContent);
                 if (args.Length == 0)
                 {
                     checker.Check(Game1.content);
