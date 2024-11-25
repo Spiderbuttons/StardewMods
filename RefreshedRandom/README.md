@@ -30,9 +30,13 @@ This mod overrides most of the
 
 ### It's probably not the PRNG.
 
-There are two previous mods that try to "fix" the Stardew PRNG. Both do so by replacing `Game1.random` with a `Random` of their own implementation. They do this because the NET random, pre-NET-6.0, is notoriously bad. But it's...probably fine for `Game1.random`. After all, it's mostly used for generating doubles (where the lowest order bits do not matter).
+There are two previous mods that try to "fix" the Stardew PRNG. Both do so by replacing `Game1.random` with a `Random` of their own implementation. They do this because the NET random, pre-NET-6.0, is notoriously bad. But it's...probably fine for `Game1.random`. After all, it's mostly used for generating doubles (where the lowest order bits do not matter), and it's not being asked for literal terabytes of randomness.
 
-The actual problem is when the game doesn't use `Game1.random`. In order to have consistency between loads of the same day, the game quite often creates new `Random` instances, seeded with some combination of the save's uniqueID, the current number of days played, and maybe a few other factors. It will then use the random once or a few times before discarding it.
+The actual problem is when the game doesn't use `Game1.random`. In order to have consistency between loads of the same day, the game quite often creates new `Random` instances, seeded with some combination of the save's uniqueID, the current number of days played, and maybe a few other factors. It will then use the random once or a few times before discarding it. There isn't much entropy here, and this tends to cause clumps or weird patterns.
+
+### So why replace it anyways?
+
+Because xoshiro's faster, both to initiate and to generate random numbers from. Microsoft's benchmarks are [here](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-6/#system-types).
 
 ## See also
 

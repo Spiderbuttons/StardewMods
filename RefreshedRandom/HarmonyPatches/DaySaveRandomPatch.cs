@@ -34,8 +34,8 @@ internal static class DaySaveRandomPatch
 
         try
         {
-            var buff = Block.Value!;
-            var span = new Span<byte>(buff);
+            byte[] buff = Block.Value!;
+            Span<byte> span = new Span<byte>(buff);
 
             BitConverter.TryWriteBytes(span, Game1.stats.DaysPlayed);
             span = span[4..];

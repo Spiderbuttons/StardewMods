@@ -3,6 +3,7 @@
 
 ### Version 0.1.7
 * Added dialogue checker.
+* Item Spawn Query checker now checks for error items.
 
 ### Version 0.1.6
 * Added ability to fast forward.

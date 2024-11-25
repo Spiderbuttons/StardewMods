@@ -1,4 +1,6 @@
-﻿using RefreshedRandom.Framework.PRNG;
+﻿// Ignore Spelling: API
+
+using RefreshedRandom.Framework.PRNG;
 
 namespace RefreshedRandom.Framework;
 

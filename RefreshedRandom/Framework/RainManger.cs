@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RefreshedRandom.Framework.PRNG;
+﻿using RefreshedRandom.Framework.PRNG;
 
 namespace RefreshedRandom.Framework;
 
@@ -28,12 +23,12 @@ public sealed class CachedWeather
     /// <summary>
     /// The rain of the past 16 days.
     /// </summary>
-    public ushort rain { get; set; }
+    public ushort Rain;
 
     /// <summary>
     /// The storms of the past 16 days.
     /// </summary>
-    public ushort storm { get; set; }
+    public ushort Storm;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CachedWeather"/> class.
@@ -41,12 +36,11 @@ public sealed class CachedWeather
     public CachedWeather()
     {
         // at init, we have no data. Fill with random.
-
         Span<byte> buffer = stackalloc byte[4];
         SeededXoshiroFactory.RNG.GetBytes(buffer);
 
-        BitConverter.TryWriteBytes(buffer, this.rain);
+        BitConverter.TryWriteBytes(buffer, this.Rain);
         buffer = buffer[2..];
-        BitConverter.TryWriteBytes(buffer, this.storm);
+        BitConverter.TryWriteBytes(buffer, this.Storm);
     }
 }

@@ -66,6 +66,7 @@ internal sealed class ModEntry : Mod
         GameLocationForagePatch.ApplyPatch(harmony);
         IntervalRandomPatch.ApplyPatch(harmony);
         RandomSeedGeneratorPatch.ApplyPatch(harmony);
+        GameOneRandomPatch.ApplyPatch(harmony, this.Helper.Reflection);
     }
 
     /// <inheritdoc />

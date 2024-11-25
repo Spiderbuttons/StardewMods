@@ -320,6 +320,20 @@ internal sealed class GSQTester(IMonitor monitor, IReflectionHelper reflector)
 
             return;
         }
+        else
+        {
+            foreach (ItemQueryResult item in result)
+            {
+                if (item.Item?.QualifiedItemId is not { } qid)
+                {
+                    monitor.Log($"{breadcrumbs.Render()} produced a null object.");
+                }
+                else if (ItemRegistry.GetData(qid) is null)
+                {
+                    monitor.Log($"{breadcrumbs.Render()} produced an error item, {qid}");
+                }
+            }
+        }
     }
 
     private void CheckGSQ(string? gsq, string[] breadcrumbs)
