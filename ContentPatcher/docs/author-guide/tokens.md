@@ -1055,6 +1055,26 @@ For example:
 <td><a href="#FirstValidFile">#</a></td>
 </tr>
 
+<tr valign="top" id="FileInFolder">
+<td>FileInFolder</td>
+<td>
+
+The file names with extensions in a folder in the content pack, given its path.
+
+The file path must be relative to the content pack's main folder, and can't contain `../`.
+
+For example:
+
+```js
+"When": {
+    "FileInFolder:assets/Maps": "BeachEdit.tmx"
+}
+```
+
+</td>
+<td><a href="#FirstValidFile">#</a></td>
+</tr>
+
 <tr valign="top" id="HasMod">
 <td>HasMod</td>
 <td>
