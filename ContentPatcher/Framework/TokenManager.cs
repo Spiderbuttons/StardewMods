@@ -285,6 +285,7 @@ internal class TokenManager : IContext
         return [
             new AbsoluteFilePathValueProvider(contentPack.DirectoryPath),
             new ImmutableValueProvider(nameof(ConditionType.ModId), modIdSet, allowedValues: modIdSet),
+            new FileInFolderValueProvider(contentPack.DirectoryPath),
             new FirstValidFileValueProvider(contentPack.HasFile),
             new HasFileValueProvider(contentPack.HasFile),
             new InternalAssetKeyValueProvider(contentPack.ModContent.GetInternalAssetName),

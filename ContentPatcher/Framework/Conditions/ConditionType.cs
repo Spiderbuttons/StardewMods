@@ -197,6 +197,9 @@ internal enum ConditionType
     /// <summary>A token which returns the first input argument which matches an existing file in the content pack.</summary>
     FirstValidFile,
 
+    /// <summary>A file in a content pack's folder relative to the content pack root.</summary>
+    FileInFolder,
+
     /// <summary>An installed mod ID.</summary>
     HasMod,
 
