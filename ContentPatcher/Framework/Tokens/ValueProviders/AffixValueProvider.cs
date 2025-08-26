@@ -7,29 +7,18 @@ using Pathoschild.Stardew.Common.Utilities;
 
 namespace ContentPatcher.Framework.Tokens.ValueProviders;
 
-/// <summary>A value provider which affixes the first input to the value of every subsequent input</summary>
+/// <summary>A value provider which affixes a string to the start or end of every input</summary>
 internal class AffixValueProvider : BaseValueProvider
 {
-    /*********
-    ** Fields
-    *********/
-    /// <summary>The token type.</summary>
-    private readonly ConditionType Type;
-
-
     /*********
     ** Public methods
     *********/
     /// <summary>Construct an instance.</summary>
-    /// <param name="type">The condition type. This must be one of <see cref="ConditionType.PrefixEach"/> or <see cref="ConditionType.SuffixEach"/>.</param>
-    public AffixValueProvider(ConditionType type)
-        : base(type, mayReturnMultipleValuesForRoot: false, isDeterministicForInput: true)
+    public AffixValueProvider()
+        : base(ConditionType.AffixEach, mayReturnMultipleValuesForRoot: false, isDeterministicForInput: true)
     {
-        if (type != ConditionType.PrefixEach && type != ConditionType.SuffixEach)
-            throw new ArgumentException($"The {nameof(type)} must be one of {ConditionType.PrefixEach} or {ConditionType.SuffixEach}.", nameof(type));
-
-        this.Type = type;
-        this.EnableInputArguments(required: true, mayReturnMultipleValues: true, maxPositionalArgs: null);
+        this.EnableInputArguments(required: false, mayReturnMultipleValues: true, maxPositionalArgs: null);
+        this.ValidNamedArguments = InvariantSets.From(["prefix", "suffix"]);
     }
 
     /// <inheritdoc />
@@ -46,8 +35,13 @@ internal class AffixValueProvider : BaseValueProvider
         if (!base.TryValidateInput(input, out error))
             return false;
 
-        if (input.PositionalArgs.Length == 0)
-            error = $"The {this.Name} token requires a {(this.Type == ConditionType.PrefixEach ? "prefix" : "suffix")} argument.";
+        if (input.HasNamedArgs)
+        {
+            if (input.NamedArgs.TryGetValue("prefix", out IInputArgumentValue? prefix) && prefix.Parsed.Length > 1)
+                error = $"The {this.Name} token only accepts a single value for the 'prefix' argument.";
+            else if (input.NamedArgs.TryGetValue("suffix", out IInputArgumentValue? suffix) && suffix.Parsed.Length > 1)
+                error = $"The {this.Name} token only accepts a single value for the 'suffix' argument.";
+        }
 
         return error == null;
     }
@@ -64,16 +58,20 @@ internal class AffixValueProvider : BaseValueProvider
     {
         this.AssertInput(input);
 
-        string? affix = input.GetFirstPositionalArg();
-        if (string.IsNullOrWhiteSpace(affix))
-            return input.PositionalArgs[1..];
+        if (!input.HasPositionalArgs)
+            return InvariantSets.Empty;
 
-        string[] output = this.Type switch
-        {
-            ConditionType.PrefixEach => input.PositionalArgs[1..].Select(p => affix + p).ToArray(),
-            ConditionType.SuffixEach => input.PositionalArgs[1..].Select(p => p + affix).ToArray(),
-            _ => throw new NotSupportedException($"Unimplemented affix type '{this.Type}'.") // should never happen
-        };
+        if (!input.HasNamedArgs)
+            return input.PositionalArgs;
+
+        string? prefix = input.NamedArgs.TryGetValue("prefix", out IInputArgumentValue? prefixArg)
+            ? prefixArg.Parsed.FirstOrDefault()
+            : string.Empty;
+        string? suffix = input.NamedArgs.TryGetValue("suffix", out IInputArgumentValue? suffixArg)
+            ? suffixArg.Parsed.FirstOrDefault()
+            : string.Empty;
+
+        string[] output = input.PositionalArgs.Select(value => $"{prefix}{value}{suffix}").ToArray();
 
         return output.Any() ? InvariantSets.From(output) : InvariantSets.Empty;
     }
