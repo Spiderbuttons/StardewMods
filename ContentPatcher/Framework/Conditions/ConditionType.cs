@@ -182,11 +182,17 @@ internal enum ConditionType
     /// <summary>Get part of a file/asset path.</summary>
     PathPart,
 
+    /// <summary>Attach an input prefix to every subsequent value.</summary>
+    PrefixEach,
+
     /// <summary>A random value selected from the given input.</summary>
     Random,
 
     /// <summary>A token which returns a string representation of its input text.</summary>
     Render,
+
+    /// <summary>Attach an input suffix to every subsequent value.</summary>
+    SuffixEach,
 
     /// <summary>A token which transforms its input text to uppercase.</summary>
     Uppercase,

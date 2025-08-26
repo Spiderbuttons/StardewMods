@@ -260,6 +260,8 @@ internal class TokenManager : IContext
             new RoundValueProvider(),
 
             // string manipulation
+            new AffixValueProvider(ConditionType.PrefixEach),
+            new AffixValueProvider(ConditionType.SuffixEach),
             new LetterCaseValueProvider(ConditionType.Lowercase),
             new LetterCaseValueProvider(ConditionType.Uppercase),
             new MergeValueProvider(),
