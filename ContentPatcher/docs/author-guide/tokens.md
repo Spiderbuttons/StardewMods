@@ -922,6 +922,25 @@ Change to all capital letters.<br />Example: `{{Uppercase:It's a warm {{Season}}
 <td><a href="#Lowercase">#</a></td>
 </tr>
 
+<tr valign="top" id="SliceEach">
+<td id="SliceEach">SliceEach</td>
+<td>
+
+When given an integer as the first input, this removes that many characters from the start or end of each subsequent input. Positive numbers will remove from the start of each value and negative numbers will remove from the end of each value.
+
+If the integer is greater than or equal to the length of a given input, that input will be removed entirely.
+
+For example:
+
+```js
+"{{SliceEach: 2, Abigail, Alex, Elliott}}" // results in "igail, ex, liott"
+"{{SliceEach: -4, Abigail, Alex, Elliott}}" // results in "Abi, Ell"
+```
+
+</td>
+<td><a href="#SliceEach">#</a></td>
+</tr>
+
 <tr valign="top" id="Merge">
 <td>Merge</td>
 <td>
