@@ -188,6 +188,9 @@ internal enum ConditionType
     /// <summary>A token which returns a string representation of its input text.</summary>
     Render,
 
+    /// <summary>Slice a given number of characters off of each value in a set</summary>
+    SliceEach,
+
     /// <summary>A token which transforms its input text to uppercase.</summary>
     Uppercase,
 

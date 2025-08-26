@@ -265,6 +265,7 @@ internal class TokenManager : IContext
             new MergeValueProvider(),
             new PathPartValueProvider(),
             new RenderValueProvider(),
+            new SliceEachValueProvider(),
 
             // metadata
             new ImmutableValueProvider(nameof(ConditionType.HasMod), installedMods, canHaveMultipleValues: true),
