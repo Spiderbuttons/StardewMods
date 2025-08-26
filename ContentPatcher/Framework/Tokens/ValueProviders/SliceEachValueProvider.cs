@@ -7,7 +7,7 @@ using Pathoschild.Stardew.Common.Utilities;
 
 namespace ContentPatcher.Framework.Tokens.ValueProviders;
 
-/// <summary>A value provider which slices a number of characters determined by the first input off of each subsequent input</summary>
+/// <summary>A value provider which slices a number of characters off of each input</summary>
 internal class SliceEachValueProvider : BaseValueProvider
 {
     /*********
@@ -17,7 +17,8 @@ internal class SliceEachValueProvider : BaseValueProvider
     public SliceEachValueProvider()
         : base(ConditionType.SliceEach, mayReturnMultipleValuesForRoot: false, isDeterministicForInput: true)
     {
-        this.EnableInputArguments(required: true, mayReturnMultipleValues: true, maxPositionalArgs: null);
+        this.EnableInputArguments(required: false, mayReturnMultipleValues: true, maxPositionalArgs: null);
+        this.ValidNamedArguments = InvariantSets.FromValue("sliceCount");
     }
 
     /// <inheritdoc />
@@ -34,10 +35,14 @@ internal class SliceEachValueProvider : BaseValueProvider
         if (!base.TryValidateInput(input, out error))
             return false;
 
-        if (input.PositionalArgs.Length == 0)
-            error = $"The {this.Name} token requires a slice count argument.";
-        else if (!int.TryParse(input.GetFirstPositionalArg(), out _))
-            error = $"Can't parse slice count '{input.GetFirstPositionalArg()}' as an integer";
+        if (input.HasNamedArgs)
+        {
+            if (input.NamedArgs["sliceCount"].Parsed.Length > 1)
+                error = $"The {this.Name} token only accepts a single value for the 'sliceCount' named argument.";
+
+            if (!int.TryParse(input.NamedArgs["sliceCount"].Parsed[0], out _))
+                error = $"Can't parse sliceCount '{input.NamedArgs["sliceCount"].Parsed[0]}' as an integer";
+        }
 
         return error == null;
     }
@@ -54,14 +59,13 @@ internal class SliceEachValueProvider : BaseValueProvider
     {
         this.AssertInput(input);
 
-        string? rawSliceCount = input.GetFirstPositionalArg();
-        if (string.IsNullOrWhiteSpace(rawSliceCount))
-            return input.PositionalArgs[1..];
+        if (!input.HasNamedArgs)
+            return input.PositionalArgs;
 
-        if (!int.TryParse(rawSliceCount, out int sliceCount))
-            throw new InvalidOperationException($"Can't parse slice count '{rawSliceCount}' as an integer"); // should never happen since we check the input in TryValidateInput
+        if (!int.TryParse(input.NamedArgs["sliceCount"].Parsed[0], out int sliceCount))
+            throw new InvalidOperationException($"Can't parse sliceCount '{input.NamedArgs["sliceCount"].Parsed[0]}' as an integer"); // should never happen since we check the input in TryValidateInput
 
-        string[] output = input.PositionalArgs[1..].Select(p =>
+        string[] output = input.PositionalArgs.Select(p =>
             sliceCount >= 0
                 ? p.Length <= sliceCount ? string.Empty : p[sliceCount..]
                 : p.Length <= -sliceCount ? string.Empty : p[..^-sliceCount]
