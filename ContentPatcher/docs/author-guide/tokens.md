@@ -922,6 +922,30 @@ Change to all capital letters.<br />Example: `{{Uppercase:It's a warm {{Season}}
 <td><a href="#Lowercase">#</a></td>
 </tr>
 
+<tr valign="top" id="PrefixEach">
+<td id="SuffixEach">PrefixEach<br />SuffixEach</td>
+<td>
+
+Affix the first input to every subsequent input:
+
+<dl>
+<dt>PrefixEach</dt>
+<dd>
+
+Prefix all values.<br />Example: `{{PrefixEach:MyMod_, ItemOne, {{Season}} }}` &rarr; `MyMod_ItemOne, MyMod_Summer`
+
+</dd>
+<dt>SuffixEach</dt>
+<dd>
+
+Suffix all values.<br />Example: `{{SuffixEach:Test, {{Range: 1, 3}} }}` &rarr; `1Test, 2Test, 3Test`
+
+</dd>
+</dl>
+</td>
+<td><a href="#PrefixEach">#</a></td>
+</tr>
+
 <tr valign="top" id="Merge">
 <td>Merge</td>
 <td>
