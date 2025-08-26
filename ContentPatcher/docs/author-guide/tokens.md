@@ -922,28 +922,20 @@ Change to all capital letters.<br />Example: `{{Uppercase:It's a warm {{Season}}
 <td><a href="#Lowercase">#</a></td>
 </tr>
 
-<tr valign="top" id="PrefixEach">
-<td id="SuffixEach">PrefixEach<br />SuffixEach</td>
+<tr valign="top" id="AffixEach">
+<td>AffixEach</td>
 <td>
 
-Affix the first input to every subsequent input:
+Affix a string to the start and/or end of every input using the `prefix` and `suffix` named arguments respectively:
 
-<dl>
-<dt>PrefixEach</dt>
-<dd>
+```js
+"{{AffixEach: Haley, Abigail, Alex |prefix=Portraits/ |suffix=_Summer }}"
+// Portraits/Haley_Summer, Portraits/Abigail_Summer, Portraits/Alex_Summer
+```
 
-Prefix all values.<br />Example: `{{PrefixEach:MyMod_, ItemOne, {{Season}} }}` &rarr; `MyMod_ItemOne, MyMod_Summer`
-
-</dd>
-<dt>SuffixEach</dt>
-<dd>
-
-Suffix all values.<br />Example: `{{SuffixEach:Test, {{Range: 1, 3}} }}` &rarr; `1Test, 2Test, 3Test`
-
-</dd>
-</dl>
+You do not need to specify both a prefix and a suffix; you may define only one of them and the other will be ignored.
 </td>
-<td><a href="#PrefixEach">#</a></td>
+<td><a href="#AffixEach">#</a></td>
 </tr>
 
 <tr valign="top" id="Merge">
