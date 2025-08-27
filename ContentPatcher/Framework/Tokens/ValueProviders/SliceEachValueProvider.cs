@@ -35,13 +35,12 @@ internal class SliceEachValueProvider : BaseValueProvider
         if (!base.TryValidateInput(input, out error))
             return false;
 
-        if (input.HasNamedArgs)
+        if (input.HasNamedArgs && input.NamedArgs.TryGetValue("sliceCount", out IInputArgumentValue? sliceArg))
         {
-            if (input.NamedArgs["sliceCount"].Parsed.Length > 1)
+            if (sliceArg.Parsed.Length > 1)
                 error = $"The {this.Name} token only accepts a single value for the 'sliceCount' named argument.";
-
-            if (!int.TryParse(input.NamedArgs["sliceCount"].Parsed[0], out _))
-                error = $"Can't parse sliceCount '{input.NamedArgs["sliceCount"].Parsed[0]}' as an integer";
+            else if (!int.TryParse(sliceArg.Raw, out _))
+                error = $"Can't parse sliceCount '{sliceArg.Raw}' as an integer";
         }
 
         return error == null;
@@ -59,11 +58,11 @@ internal class SliceEachValueProvider : BaseValueProvider
     {
         this.AssertInput(input);
 
-        if (!input.HasNamedArgs)
+        if (!input.HasNamedArgs || !input.NamedArgs.TryGetValue("sliceCount", out IInputArgumentValue? sliceArg))
             return input.PositionalArgs;
 
-        if (!int.TryParse(input.NamedArgs["sliceCount"].Parsed[0], out int sliceCount))
-            throw new InvalidOperationException($"Can't parse sliceCount '{input.NamedArgs["sliceCount"].Parsed[0]}' as an integer"); // should never happen since we check the input in TryValidateInput
+        if (!int.TryParse(sliceArg.Raw, out int sliceCount))
+            throw new InvalidOperationException($"Can't parse sliceCount '{sliceArg.Raw}' as an integer"); // should never happen since we check the input in TryValidateInput
 
         string[] output = input.PositionalArgs.Select(p =>
             sliceCount >= 0
