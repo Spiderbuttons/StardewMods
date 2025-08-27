@@ -64,11 +64,11 @@ internal class AffixValueProvider : BaseValueProvider
         if (!input.HasNamedArgs)
             return input.PositionalArgs;
 
-        string? prefix = input.NamedArgs.TryGetValue("prefix", out IInputArgumentValue? prefixArg)
-            ? prefixArg.Parsed.FirstOrDefault()
+        string prefix = input.NamedArgs.TryGetValue("prefix", out IInputArgumentValue? prefixArg)
+            ? prefixArg.Raw // we already validated that there is only one value in this argument, so we can grab the raw
             : string.Empty;
-        string? suffix = input.NamedArgs.TryGetValue("suffix", out IInputArgumentValue? suffixArg)
-            ? suffixArg.Parsed.FirstOrDefault()
+        string suffix = input.NamedArgs.TryGetValue("suffix", out IInputArgumentValue? suffixArg)
+            ? suffixArg.Raw
             : string.Empty;
 
         string[] output = input.PositionalArgs.Select(value => $"{prefix}{value}{suffix}").ToArray();
